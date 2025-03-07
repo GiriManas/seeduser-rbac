@@ -130,3 +130,78 @@ function handleEdit(user: User) {
 function handleDelete(user: User) {
   console.log("Deleting user:", user);
 }
+
+
+EditUserModal.tsx
+
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+
+type EditUserModalProps = {
+  user: any; // Replace with User type if available
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (updatedUser: any) => void;
+};
+
+export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalProps) {
+  const [roles, setRoles] = useState(user.roles || []);
+  const [groups, setGroups] = useState(user.groups || []);
+  const [accountingUnit, setAccountingUnit] = useState(user.accountingUnit || "");
+
+  function handleSave() {
+    onSave({ ...user, roles, groups, accountingUnit });
+    onClose();
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit User</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          {/* Roles Input */}
+          <label className="block">
+            <span className="text-sm font-medium">Roles</span>
+            <input
+              type="text"
+              value={roles.join(", ")}
+              onChange={(e) => setRoles(e.target.value.split(", "))}
+              className="w-full border rounded p-2"
+            />
+          </label>
+
+          {/* Groups Input */}
+          <label className="block">
+            <span className="text-sm font-medium">Groups</span>
+            <input
+              type="text"
+              value={groups.join(", ")}
+              onChange={(e) => setGroups(e.target.value.split(", "))}
+              className="w-full border rounded p-2"
+            />
+          </label>
+
+          {/* Accounting Unit Input */}
+          <label className="block">
+            <span className="text-sm font-medium">Accounting Unit</span>
+            <input
+              type="text"
+              value={accountingUnit}
+              onChange={(e) => setAccountingUnit(e.target.value)}
+              className="w-full border rounded p-2"
+            />
+          </label>
+        </div>
+
+        <DialogFooter>
+          <button onClick={onClose} className="px-4 py-2 bg-gray-500 text-white rounded">Cancel</button>
+          <button onClick={handleSave} className="px-4 py-2 bg-blue-500 text-white rounded">Save</button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
