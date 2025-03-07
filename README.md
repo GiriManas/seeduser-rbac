@@ -1,4 +1,4 @@
-# seeduser-rbac
+by# seeduser-rbac
 
 UI Start Server -> npm run dev
 
@@ -116,4 +116,17 @@ export default function UserTable() {
       </div>
     </div>
   );
+}
+
+
+function handleView(user: User) {
+  console.log("Viewing user:", user);
+}
+
+function handleEdit(user: User) {
+  console.log("Editing user:", user);
+}
+
+function handleDelete(user: User) {
+  console.log("Deleting user:", user);
 }
