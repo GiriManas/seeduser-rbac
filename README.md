@@ -1,78 +1,85 @@
-"""
+""""
 
-return (
+export type PendingUser = {
+  id: string;
+  email: string;
+  name: string;
+  approver: string;
+  status: "Pending" | "Approved" | "Declined";
+};
+
+export const pendingUsers: PendingUser[] = [
+  { id: "u101", email: "user1@example.com", name: "Alice Doe", approver: "John Admin", status: "Pending" },
+  { id: "u102", email: "user2@example.com", name: "Bob Smith", approver: "Sarah Manager", status: "Pending" },
+  { id: "u103", email: "user3@example.com", name: "Charlie Brown", approver: "Jane Supervisor", status: "Pending" },
+];
+
+
+
+"use client";
+import { useState } from "react";
+import { CheckIcon, XCircleIcon } from "@heroicons/react/24/solid";
+import { pendingUsers, PendingUser } from "@/data/pendingUsers";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+export default function PendingUsers() {
+  const [userList, setUserList] = useState(pendingUsers);
+
+  function handleApprove(userId: string) {
+    setUserList(userList.map(user => 
+      user.id === userId ? { ...user, status: "Approved" } : user
+    ));
+  }
+
+  function handleDecline(userId: string) {
+    setUserList(userList.map(user => 
+      user.id === userId ? { ...user, status: "Declined" } : user
+    ));
+  }
+
+  return (
     <div className="p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-xl font-semibold mb-4">Users Table</h2>
-
-      {/* 🔍 Search Input */}
-      <input
-        type="text"
-        placeholder="Search users..."
-        className="w-full p-2 border rounded mb-4"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
-
+      <h2 className="text-xl font-semibold mb-4">Pending Users</h2>
       <div className="overflow-x-auto border rounded-lg shadow-sm">
         <Table className="w-full border-collapse">
           <TableHeader className="bg-gray-100 text-gray-700">
             <TableRow>
-              <TableHead className="px-4 py-2 cursor-pointer" onClick={() => handleSort("id")}>
-                ID {sortColumn === "id" && (sortOrder === "asc" ? <ArrowUpIcon className="h-4 w-4 inline" /> : <ArrowDownIcon className="h-4 w-4 inline" />)}
-              </TableHead>
-              <TableHead className="px-4 py-2 cursor-pointer" onClick={() => handleSort("username")}>
-                Username {sortColumn === "username" && (sortOrder === "asc" ? <ArrowUpIcon className="h-4 w-4 inline" /> : <ArrowDownIcon className="h-4 w-4 inline" />)}
-              </TableHead>
-              <TableHead className="px-4 py-2">Roles</TableHead>
-              <TableHead className="px-4 py-2">Groups</TableHead>
-              <TableHead className="px-4 py-2 cursor-pointer" onClick={() => handleSort("created")}>
-                Created {sortColumn === "created" && (sortOrder === "asc" ? <ArrowUpIcon className="h-4 w-4 inline" /> : <ArrowDownIcon className="h-4 w-4 inline" />)}
-              </TableHead>
-              <TableHead className="px-4 py-2">Actions</TableHead>
+              <TableHead className="px-4 py-2">User ID</TableHead>
+              <TableHead className="px-4 py-2">Email</TableHead>
+              <TableHead className="px-4 py-2">Name</TableHead>
+              <TableHead className="px-4 py-2">Approver</TableHead>
+              <TableHead className="px-4 py-2">Status</TableHead>
+              <TableHead className="px-4 py-2">Approval</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedUsers.map((user: User) => (
+            {userList.map((user: PendingUser) => (
               <TableRow key={user.id} className="border-b hover:bg-gray-100">
                 <TableCell className="px-4 py-2">{user.id}</TableCell>
-                <TableCell className="px-4 py-2">{user.username}</TableCell>
-
-                {/* Roles */}
-                <TableCell className="px-4 py-2">
-                  <div className="flex flex-wrap gap-2">
-                    {user.roles.map((role, index) => (
-                      <Badge key={index} type="role">{role}</Badge>
-                    ))}
-                  </div>
+                <TableCell className="px-4 py-2">{user.email}</TableCell>
+                <TableCell className="px-4 py-2">{user.name}</TableCell>
+                <TableCell className="px-4 py-2">{user.approver}</TableCell>
+                <TableCell className={`px-4 py-2 font-medium ${user.status === "Approved" ? "text-green-600" : user.status === "Declined" ? "text-red-600" : "text-yellow-600"}`}>
+                  {user.status}
                 </TableCell>
-
-                {/* Groups */}
-                <TableCell className="px-4 py-2">
-                  <div className="flex flex-wrap gap-2">
-                    {user.groups.map((group, index) => (
-                      <Badge key={index} type="group">{group}</Badge>
-                    ))}
-                  </div>
-                </TableCell>
-
-                <TableCell className="px-4 py-2">{user.created}</TableCell>
-
-                {/* Actions */}
                 <TableCell className="px-4 py-2 flex gap-3">
-                  {/* View Button */}
-                  <button className="text-blue-500 hover:text-blue-700">
-                    <EyeIcon className="h-5 w-5" />
-                  </button>
-
-                  {/* Edit Button */}
-                  <button className="text-yellow-500 hover:text-yellow-700">
-                    <PencilIcon className="h-5 w-5" />
-                  </button>
-
-                  {/* Delete Button */}
-                  <button className="text-red-500 hover:text-red-700">
-                    <TrashIcon className="h-5 w-5" />
-                  </button>
+                  {user.status === "Pending" && (
+                    <>
+                      <button onClick={() => handleApprove(user.id)} className="text-green-500 hover:text-green-700">
+                        <CheckIcon className="h-5 w-5" />
+                      </button>
+                      <button onClick={() => handleDecline(user.id)} className="text-red-500 hover:text-red-700">
+                        <XCircleIcon className="h-5 w-5" />
+                      </button>
+                    </>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -84,7 +91,4 @@ return (
 }
 
 
-
-
-
-"""
+""""
