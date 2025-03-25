@@ -66,3 +66,43 @@ Modify the Roles Column inside the HTML
     </select>
   )}
 </TableCell>
+
+
+
+
+Modification Again
+
+
+<TableCell className="px-4 py-2">
+  <div className="flex flex-wrap gap-2">
+    {userRoles[user.id].map((role, index) => (
+      <Badge key={index} type="role" onRemove={() => removeRole(user.id, role)}>
+        {role}
+      </Badge>
+    ))}
+    
+    {/* ➕ Add Role Button */}
+    <button onClick={() => setShowDropdown(user.id)} className="text-green-500">
+      ➕
+    </button>
+  </div>
+
+  {/* Role Dropdown */}
+  {showDropdown === user.id && (
+    <select
+      onChange={(e) => {
+        addRole(user.id, e.target.value);
+        setShowDropdown(null);
+      }}
+      className="mt-2 p-1 border rounded"
+    >
+      <option value="">Select Role</option>
+      {allRoles.map((role) => (
+        <option key={role} value={role}>
+          {role}
+        </option>
+      ))}
+    </select>
+  )}
+</TableCell>
+
