@@ -95,3 +95,31 @@ const EditRoleModal: React.FC<EditRoleModalProps> = ({ isOpen, onClose, accessTo
 };
 
 export default EditRoleModal;
+
+
+
+
+
+const EditRoleModal = ({ isOpen, onClose, roleData, onRoleUpdated, accessToken }) => {
+  const [name, setName] = useState("");
+  const [entitlement, setEntitlement] = useState("");
+  const [description, setDescription] = useState("");
+
+  // Update form fields when modal opens with new role data
+  useEffect(() => {
+    if (roleData) {
+      setName(roleData.name || "");
+      setEntitlement(roleData.entitlement || "");
+      setDescription(roleData.description || "");
+    }
+  }, [roleData]);  // Runs whenever roleData changes
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <input value={name} onChange={(e) => setName(e.target.value)} />
+      <input value={entitlement} onChange={(e) => setEntitlement(e.target.value)} />
+      <input value={description} onChange={(e) => setDescription(e.target.value)} />
+      {/* Save button here */}
+    </Modal>
+  );
+};
