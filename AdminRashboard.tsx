@@ -3,12 +3,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const AdminDashboard = () => {
   return (
-    <div className="p-10 flex flex-col items-center min-h-screen">
-      <h1 className="text-3xl font-bold mb-8">Admin Controls</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen w-full px-4">
+      {/* Title */}
+      <h1 className="text-3xl font-bold mb-8 text-center">Admin Controls</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
+      {/* Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl mx-auto place-items-center">
         {/* User Controls Card */}
-        <Card className="p-4 shadow-lg hover:shadow-xl transition duration-300">
+        <Card className="p-6 w-80 shadow-lg hover:shadow-xl transition duration-300 text-center">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">User Controls</CardTitle>
           </CardHeader>
@@ -34,7 +36,7 @@ const AdminDashboard = () => {
         </Card>
 
         {/* Roles Card */}
-        <Card className="p-4 shadow-lg hover:shadow-xl transition duration-300">
+        <Card className="p-6 w-80 shadow-lg hover:shadow-xl transition duration-300 text-center">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Roles</CardTitle>
           </CardHeader>
@@ -46,7 +48,7 @@ const AdminDashboard = () => {
         </Card>
 
         {/* Groups Card */}
-        <Card className="p-4 shadow-lg hover:shadow-xl transition duration-300">
+        <Card className="p-6 w-80 shadow-lg hover:shadow-xl transition duration-300 text-center">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Groups</CardTitle>
           </CardHeader>
