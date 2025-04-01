@@ -3,12 +3,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const AdminDashboard = () => {
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Admin Controls</h1>
+    <div className="p-6 flex flex-col items-center">
+      <h1 className="text-2xl font-semibold mb-6">Admin Controls</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
         {/* User Controls Card */}
-        <Card>
+        <Card className="text-center">
           <CardHeader>
             <CardTitle>User Controls</CardTitle>
           </CardHeader>
@@ -34,7 +34,7 @@ const AdminDashboard = () => {
         </Card>
 
         {/* Roles Card */}
-        <Card>
+        <Card className="text-center">
           <CardHeader>
             <CardTitle>Roles</CardTitle>
           </CardHeader>
@@ -46,7 +46,7 @@ const AdminDashboard = () => {
         </Card>
 
         {/* Groups Card */}
-        <Card>
+        <Card className="text-center">
           <CardHeader>
             <CardTitle>Groups</CardTitle>
           </CardHeader>
