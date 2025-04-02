@@ -15,7 +15,7 @@ const AdminDashboard = () => {
           <CardHeader>
             <CardTitle className="text-lg font-semibold">User Controls</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center flex-grow space-y-2 overflow-hidden">
+          <CardContent className="flex flex-col items-center justify-between flex-grow overflow-auto space-y-2">
             <Link href="/admin/users" className="text-blue-500 font-medium hover:underline">
               Active Users
             </Link>
