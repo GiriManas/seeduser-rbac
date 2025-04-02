@@ -10,37 +10,29 @@ const AdminDashboard = () => {
       {/* Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl mx-auto place-items-center">
         {/* User Controls Card */}
-        <Card className="p-6 w-80 shadow-lg hover:shadow-xl transition duration-300 text-center">
+        <Card className="p-6 w-80 h-40 flex flex-col justify-between shadow-lg hover:shadow-xl transition duration-300 text-center">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">User Controls</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/admin/users" className="text-blue-500 font-medium hover:underline">
-                  Active Users
-                </Link>
-              </li>
-              <li>
-                <Link href="/admin/pending-users" className="text-blue-500 font-medium hover:underline">
-                  Pending Users
-                </Link>
-              </li>
-              <li>
-                <Link href="/admin/password-reset" className="text-blue-500 font-medium hover:underline">
-                  Password Reset Request
-                </Link>
-              </li>
-            </ul>
+          <CardContent className="flex flex-col space-y-2">
+            <Link href="/admin/users" className="text-blue-500 font-medium hover:underline">
+              Active Users
+            </Link>
+            <Link href="/admin/pending-users" className="text-blue-500 font-medium hover:underline">
+              Pending Users
+            </Link>
+            <Link href="/admin/password-reset" className="text-blue-500 font-medium hover:underline">
+              Password Reset Request
+            </Link>
           </CardContent>
         </Card>
 
         {/* Roles Card */}
-        <Card className="p-6 w-80 shadow-lg hover:shadow-xl transition duration-300 text-center">
+        <Card className="p-6 w-80 h-40 flex flex-col justify-between shadow-lg hover:shadow-xl transition duration-300 text-center">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Roles</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col justify-center">
             <Link href="/admin/roles" className="text-blue-500 font-medium hover:underline">
               Manage Roles
             </Link>
@@ -48,11 +40,11 @@ const AdminDashboard = () => {
         </Card>
 
         {/* Groups Card */}
-        <Card className="p-6 w-80 shadow-lg hover:shadow-xl transition duration-300 text-center">
+        <Card className="p-6 w-80 h-40 flex flex-col justify-between shadow-lg hover:shadow-xl transition duration-300 text-center">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Groups</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col justify-center">
             <Link href="/admin/groups" className="text-blue-500 font-medium hover:underline">
               Manage Groups
             </Link>
