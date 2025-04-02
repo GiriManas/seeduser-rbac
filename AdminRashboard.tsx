@@ -8,13 +8,13 @@ const AdminDashboard = () => {
       <h1 className="text-3xl font-bold mb-8 text-center">Admin Controls</h1>
 
       {/* Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl mx-auto place-items-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl mx-auto justify-center">
         {/* User Controls Card */}
-        <Card className="p-6 w-80 h-40 flex flex-col justify-between shadow-lg hover:shadow-xl transition duration-300 text-center">
+        <Card className="p-6 w-full h-44 flex flex-col justify-between shadow-lg hover:shadow-xl transition duration-300 text-center">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">User Controls</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col space-y-2">
+          <CardContent className="flex flex-col items-center space-y-2">
             <Link href="/admin/users" className="text-blue-500 font-medium hover:underline">
               Active Users
             </Link>
@@ -28,11 +28,11 @@ const AdminDashboard = () => {
         </Card>
 
         {/* Roles Card */}
-        <Card className="p-6 w-80 h-40 flex flex-col justify-between shadow-lg hover:shadow-xl transition duration-300 text-center">
+        <Card className="p-6 w-full h-44 flex flex-col justify-between shadow-lg hover:shadow-xl transition duration-300 text-center">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Roles</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col justify-center">
+          <CardContent className="flex flex-col items-center justify-center">
             <Link href="/admin/roles" className="text-blue-500 font-medium hover:underline">
               Manage Roles
             </Link>
@@ -40,11 +40,11 @@ const AdminDashboard = () => {
         </Card>
 
         {/* Groups Card */}
-        <Card className="p-6 w-80 h-40 flex flex-col justify-between shadow-lg hover:shadow-xl transition duration-300 text-center">
+        <Card className="p-6 w-full h-44 flex flex-col justify-between shadow-lg hover:shadow-xl transition duration-300 text-center">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Groups</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col justify-center">
+          <CardContent className="flex flex-col items-center justify-center">
             <Link href="/admin/groups" className="text-blue-500 font-medium hover:underline">
               Manage Groups
             </Link>
