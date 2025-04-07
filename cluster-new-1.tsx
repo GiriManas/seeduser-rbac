@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import {
   Chart as ChartJS,
   LinearScale,
@@ -7,27 +8,37 @@ import {
   Tooltip,
   Legend,
   ChartOptions,
-  ChartTypeRegistry,
   Chart,
 } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { Scatter } from 'react-chartjs-2';
-import { useState } from 'react';
+import type { TooltipModel } from 'chart.js';
 
-// Register Chart.js components and plugins
 ChartJS.register(LinearScale, PointElement, Tooltip, Legend, zoomPlugin);
 
-// Optional: type for your data point
 interface DataPoint {
+  topic: string;
   x: number;
   y: number;
-  topic?: string;
 }
 
-export default function ScatterPlot() {
-  const [hoveredLegendIndex, setHoveredLegendIndex] = useState<number | null>(null);
-  const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null);
+interface ScatterPlotProps {
+  data: {
+    datasets: {
+      label: string;
+      data: DataPoint[];
+      backgroundColor?: string;
+    }[];
+  };
+  setHoveredPoint: (point: DataPoint | null) => void;
+  setHoveredLegendIndex: (index: number | null) => void;
+}
 
+export default function ScatterPlot({
+  data,
+  setHoveredPoint,
+  setHoveredLegendIndex,
+}: ScatterPlotProps) {
   const options: ChartOptions<'scatter'> = {
     scales: {
       x: {
@@ -53,16 +64,15 @@ export default function ScatterPlot() {
           tooltip,
         }: {
           chart: Chart<'scatter'>;
-          tooltip: ChartTypeRegistry['scatter']['options']['plugins']['tooltip'];
+          tooltip: TooltipModel<'scatter'>;
         }) {
-          const tooltipModel = tooltip as any;
-
-          if (!tooltipModel || !tooltipModel.dataPoints?.length) {
+          if (!tooltip || !tooltip.dataPoints?.length) {
             setHoveredPoint(null);
             return;
           }
 
-          const dataPoint: DataPoint = tooltipModel.dataPoints[0].raw;
+          const dataPoint = tooltip.dataPoints[0].raw as DataPoint;
+
           setHoveredPoint({
             topic: dataPoint.topic,
             x: dataPoint.x,
@@ -88,23 +98,5 @@ export default function ScatterPlot() {
     },
   };
 
-  const data = {
-    datasets: [
-      {
-        label: 'Scatter Dataset',
-        data: [
-          { x: 10, y: 20, topic: 'A' },
-          { x: 15, y: 10, topic: 'B' },
-          { x: 25, y: 30, topic: 'C' },
-        ],
-        backgroundColor: 'rgba(75,192,192,1)',
-      },
-    ],
-  };
-
-  return (
-    <div className="w-full h-full">
-      <Scatter options={options} data={data} />
-    </div>
-  );
+  return <Scatter data={data} options={options} />;
 }
