@@ -1,39 +1,40 @@
-"use client";
+'use client'
 
-import { useMemo, useState } from "react";
-import { ScatterPlot, DataPoint } from "@/components/ScatterPlot";
-
-function generatePoints(topic: string, count: number): DataPoint[] {
-  return Array.from({ length: count }, () => ({
-    x: parseFloat((Math.random() * 9 + 1).toFixed(2)),
-    y: parseFloat((Math.random() * 9 + 1).toFixed(2)),
-    topic,
-  }));
-}
+import { useMemo, useState } from 'react'
+import ScatterPlot, { DataPoint } from './ScatterPlot'
 
 export default function NeuroClusterView() {
-  const data: DataPoint[] = useMemo(() => [
-    ...generatePoints("Neuro A", 10),
-    ...generatePoints("Neuro B", 10),
-    ...generatePoints("Neuro C", 10),
-  ], []);
+  const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null)
 
-  const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null);
+  const data: DataPoint[] = useMemo(() => {
+    const generatePoints = (topic: string) => {
+      return Array.from({ length: 10 }, () => ({
+        x: parseFloat((Math.random() * 10).toFixed(2)),
+        y: parseFloat((Math.random() * 10).toFixed(2)),
+        topic,
+      }))
+    }
+
+    return [
+      ...generatePoints('Neuro A'),
+      ...generatePoints('Neuro B'),
+      ...generatePoints('Neuro C'),
+    ]
+  }, [])
 
   return (
-    <section className="flex justify-center items-center h-screen bg-white">
-      <div className="flex gap-8">
+    <section className="flex items-center justify-center min-h-screen bg-white p-4">
+      <div className="flex flex-col md:flex-row items-start gap-8">
         <ScatterPlot data={data} setHoveredPoint={setHoveredPoint} />
         {hoveredPoint && (
-          <div className="text-gray-700 p-4 border rounded shadow-md w-60 h-fit">
-            <div>
-              <span className="font-bold">Hovered Topic:</span> {hoveredPoint.topic}
-            </div>
-            <div>X: {hoveredPoint.x.toFixed(2)}</div>
-            <div>Y: {hoveredPoint.y.toFixed(2)}</div>
+          <div className="text-gray-800 text-sm mt-4 md:mt-0">
+            <p>
+              Hovered Topic: <strong>{hoveredPoint.topic}</strong>
+            </p>
+            <p>X: {hoveredPoint.x.toFixed(2)}, Y: {hoveredPoint.y.toFixed(2)}</p>
           </div>
         )}
       </div>
     </section>
-  );
+  )
 }
