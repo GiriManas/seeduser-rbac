@@ -1,40 +1,42 @@
-'use client'
+import { useState, useMemo } from 'react';
+import ScatterPlot from './ScatterPlot';
 
-import { useMemo, useState } from 'react'
-import ScatterPlot, { DataPoint } from './ScatterPlot'
+interface DataPoint {
+  x: number;
+  y: number;
+  topic: string;
+}
 
 export default function NeuroClusterView() {
-  const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null)
+  const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null);
 
-  const data: DataPoint[] = useMemo(() => {
-    const generatePoints = (topic: string) => {
-      return Array.from({ length: 10 }, () => ({
-        x: parseFloat((Math.random() * 10).toFixed(2)),
-        y: parseFloat((Math.random() * 10).toFixed(2)),
-        topic,
-      }))
-    }
+  const generatePoints = (topic: string): DataPoint[] => {
+    return Array.from({ length: 10 }, () => ({
+      x: parseFloat((Math.random() * 10).toFixed(2)),
+      y: parseFloat((Math.random() * 10).toFixed(2)),
+      topic,
+    }));
+  };
 
-    return [
-      ...generatePoints('Neuro A'),
-      ...generatePoints('Neuro B'),
-      ...generatePoints('Neuro C'),
-    ]
-  }, [])
+  const data: DataPoint[] = useMemo(() => [
+    ...generatePoints('Neuro A'),
+    ...generatePoints('Neuro B'),
+    ...generatePoints('Neuro C'),
+  ], []);
 
   return (
-    <section className="flex items-center justify-center min-h-screen bg-white p-4">
-      <div className="flex flex-col md:flex-row items-start gap-8">
+    <section className="p-4">
+      <h2 className="text-xl font-semibold mb-4">Neuro Topics Scatter Plot</h2>
+      <div className="flex gap-8">
         <ScatterPlot data={data} setHoveredPoint={setHoveredPoint} />
         {hoveredPoint && (
-          <div className="text-gray-800 text-sm mt-4 md:mt-0">
-            <p>
-              Hovered Topic: <strong>{hoveredPoint.topic}</strong>
-            </p>
-            <p>X: {hoveredPoint.x.toFixed(2)}, Y: {hoveredPoint.y.toFixed(2)}</p>
+          <div className="p-4 border rounded shadow-md bg-white">
+            <p><strong>Hovered Topic:</strong> {hoveredPoint.topic}</p>
+            <p>X: {hoveredPoint.x.toFixed(2)}</p>
+            <p>Y: {hoveredPoint.y.toFixed(2)}</p>
           </div>
         )}
       </div>
     </section>
-  )
+  );
 }
