@@ -6,34 +6,41 @@ function addRole(user: ActiveUser, newRole: string) {
 
   const updatedGroups = user.groups ?? [];
 
-  setUserRoles((prevRoles) => ({
-    ...prevRoles,
-    [user.user_id]: updatedRoles,
-  }));
-
   modifyAdminActiveUser(session.accessToken, user.user_id, {
     roles: updatedRoles,
     groups: updatedGroups,
     au: user.au ?? "",
+  }).then(() => {
+    setUsers((prevUsers) =>
+      prevUsers.map((u) =>
+        u.user_id === user.user_id
+          ? { ...u, roles: updatedRoles }
+          : u
+      )
+    );
   });
 }
 
 function removeRole(user: ActiveUser, roleToRemove: string) {
   const existingRoles = user.roles ?? [];
-  const updatedRoles = existingRoles.filter((role) => role !== roleToRemove);
+  const updatedRoles = existingRoles.filter(role => role !== roleToRemove);
   const updatedGroups = user.groups ?? [];
-
-  setUserRoles((prevRoles) => ({
-    ...prevRoles,
-    [user.user_id]: updatedRoles,
-  }));
 
   modifyAdminActiveUser(session.accessToken, user.user_id, {
     roles: updatedRoles,
     groups: updatedGroups,
     au: user.au ?? "",
+  }).then(() => {
+    setUsers((prevUsers) =>
+      prevUsers.map((u) =>
+        u.user_id === user.user_id
+          ? { ...u, roles: updatedRoles }
+          : u
+      )
+    );
   });
 }
+
 
 function addGroup(user: ActiveUser, newGroup: string) {
   const existingGroups = user.groups ?? [];
@@ -43,31 +50,38 @@ function addGroup(user: ActiveUser, newGroup: string) {
 
   const updatedRoles = user.roles ?? [];
 
-  setUserGroups((prevGroups) => ({
-    ...prevGroups,
-    [user.user_id]: updatedGroups,
-  }));
-
   modifyAdminActiveUser(session.accessToken, user.user_id, {
     roles: updatedRoles,
     groups: updatedGroups,
     au: user.au ?? "",
+  }).then(() => {
+    setUsers((prevUsers) =>
+      prevUsers.map((u) =>
+        u.user_id === user.user_id
+          ? { ...u, groups: updatedGroups }
+          : u
+      )
+    );
   });
 }
 
 function removeGroup(user: ActiveUser, groupToRemove: string) {
   const existingGroups = user.groups ?? [];
-  const updatedGroups = existingGroups.filter((group) => group !== groupToRemove);
+  const updatedGroups = existingGroups.filter(group => group !== groupToRemove);
   const updatedRoles = user.roles ?? [];
-
-  setUserGroups((prevGroups) => ({
-    ...prevGroups,
-    [user.user_id]: updatedGroups,
-  }));
 
   modifyAdminActiveUser(session.accessToken, user.user_id, {
     roles: updatedRoles,
     groups: updatedGroups,
     au: user.au ?? "",
+  }).then(() => {
+    setUsers((prevUsers) =>
+      prevUsers.map((u) =>
+        u.user_id === user.user_id
+          ? { ...u, groups: updatedGroups }
+          : u
+      )
+    );
   });
 }
+
