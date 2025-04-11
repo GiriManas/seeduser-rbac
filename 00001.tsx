@@ -1,114 +1,133 @@
-import React, { useEffect, useState } from "react";
-import { Modal, Button } from "@/components/ui"; // adjust path as needed
-import { ActiveUser } from "@/types"; // your user type
-import { modifyAdminActiveUser } from "@/api";
+import { useState, useEffect } from "react";
+import { ActiveUser } from "@/types";
+import { modifyAdminActiveUser } from "@/api/admin";
 import { toast } from "react-toastify";
-import { Badge } from "@/components/ui/badge"; // Ensure this is correctly imported
-import InfoLabel from "@/components/custom/InfoLabel"; // Optional label component
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-type EditUserModalProps = {
-  user: ActiveUser;
+interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUserUpdated: (user: ActiveUser) => void;
-};
+  user: ActiveUser | null;
+  session: any;
+  onUserUpdated: (updatedUser: ActiveUser) => void;
+}
 
-const EditUserModal: React.FC<EditUserModalProps> = ({
-  user,
+export default function EditUserModal({
   isOpen,
   onClose,
+  user,
+  session,
   onUserUpdated,
-}) => {
-  const [editableUser, setEditableUser] = useState<ActiveUser>(user);
-  const [isChanged, setIsChanged] = useState(false);
+}: EditUserModalProps) {
+  const [editedUser, setEditedUser] = useState<ActiveUser | null>(user);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    setEditableUser(user);
-    setIsChanged(false);
+    setEditedUser(user);
   }, [user]);
 
-  useEffect(() => {
-    const hasChanged =
-      editableUser.role !== user.role ||
-      editableUser.group !== user.group ||
-      editableUser.au !== user.au;
-    setIsChanged(hasChanged);
-  }, [editableUser, user]);
+  if (!isOpen || !editedUser) return null;
+
+  const handleChange = (field: keyof ActiveUser, value: any) => {
+    setEditedUser((prev) => (prev ? { ...prev, [field]: value } : prev));
+  };
 
   const handleSave = async () => {
-    try {
-      const payload = {
-        role: editableUser.role,
-        group: editableUser.group,
-        au: editableUser.au,
-      };
+    if (!editedUser || !session?.accessToken) return;
+    setIsSaving(true);
 
-      const response = await modifyAdminActiveUser(null, editableUser, payload);
+    try {
+      const response = await modifyAdminActiveUser(session.accessToken, editedUser, {
+        role: editedUser.roles ?? [],
+        group: editedUser.groups ?? [],
+        au: editedUser.au ?? "",
+      });
 
       if (response) {
-        toast.success("User updated successfully!");
+        toast.success("User updated successfully");
         onUserUpdated(response);
         onClose();
+      } else {
+        toast.error("Failed to update user");
       }
-    } catch (err) {
-      toast.error("Failed to update user.");
+    } catch (error) {
+      toast.error("Something went wrong");
+      console.error("Update error:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit User">
-      <div className="space-y-4 p-4">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-2xl p-6">
+        <h2 className="text-xl font-bold mb-4">Edit User</h2>
 
-        <InfoLabel label="ID" value={user?.id ?? "-"} />
-        <InfoLabel label="Email" value={user?.email ?? "-"} />
-        <InfoLabel label="Name" value={user?.name ?? "-"} />
+        {/* Non-editable fields */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <InfoLabel label="ID" value={editedUser.id ?? "—"} />
+          <InfoLabel label="User ID" value={editedUser.user_id ?? "—"} />
+          <InfoLabel label="Name" value={editedUser.name ?? "—"} />
+          <InfoLabel label="Email" value={editedUser.email ?? "—"} />
+          <InfoLabel label="Status" value={editedUser.status ?? "—"} />
+          <InfoLabel label="Approver" value={editedUser.approver ?? "—"} />
+          <InfoLabel label="Created" value={editedUser.created_at ?? "—"} />
+          <InfoLabel label="Updated" value={editedUser.updated_at ?? "—"} />
+        </div>
 
-        {/* Display Roles as badges */}
-        <div>
-          <label className="text-sm font-medium">Roles</label>
-          <div className="flex flex-wrap gap-2 mt-1">
-            {editableUser?.role?.length > 0 ? (
-              editableUser.role.map((role: string, idx: number) => (
-                <Badge key={idx} variant="default">
-                  {role}
-                </Badge>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No roles assigned</p>
-            )}
+        {/* Editable Fields */}
+        <div className="space-y-4 mb-6">
+          <div>
+            <Label>Roles</Label>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {editedUser.roles?.map((role, idx) => (
+                <Badge key={idx} variant="secondary">{role}</Badge>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label>Groups</Label>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {editedUser.groups?.map((group, idx) => (
+                <Badge key={idx} variant="secondary">{group}</Badge>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="au">Accounting Unit</Label>
+            <Input
+              id="au"
+              value={editedUser.au ?? ""}
+              onChange={(e) => handleChange("au", e.target.value)}
+              placeholder="Enter AU"
+            />
           </div>
         </div>
 
-        {/* Display Groups as badges */}
-        <div>
-          <label className="text-sm font-medium">Groups</label>
-          <div className="flex flex-wrap gap-2 mt-1">
-            {editableUser?.group?.length > 0 ? (
-              editableUser.group.map((group: string, idx: number) => (
-                <Badge key={idx} variant="secondary">
-                  {group}
-                </Badge>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No groups assigned</p>
-            )}
-          </div>
-        </div>
-
-        {/* Accounting Unit */}
-        <InfoLabel label="Accounting Unit" value={editableUser?.au ?? "-"} />
-
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>
-          <Button disabled={!isChanged} onClick={handleSave}>
-            Save
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>
-    </Modal>
+    </div>
   );
-};
+}
 
-export default EditUserModal;
+function InfoLabel({ label, value }: { label: string; value: string | number | null }) {
+  return (
+    <div>
+      <Label className="text-muted-foreground text-xs uppercase">{label}</Label>
+      <p className="text-sm font-medium">{value}</p>
+    </div>
+  );
+}
