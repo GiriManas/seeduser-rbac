@@ -2,18 +2,23 @@ import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { modifyAdminActiveUser } from "@/lib/api"; // Adjust the path accordingly
-import { ActiveUser } from "@/types/user"; // Adjust based on your project
-import { toast } from "sonner";
+import { modifyAdminActiveUser } from "@/lib/api";
+import { ActiveUser } from "@/types/user";
+import { toast } from "sonner"; // or use useToast from ShadCN
 
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: ActiveUser | null;
   session: any;
-  onUserUpdated: (updatedUser: ActiveUser) => void; // Callback to update table
+  onUserUpdated: (updatedUser: ActiveUser) => void;
 }
+
+const InfoLabel = ({ label, value }: { label: string; value: string | number | null }) => (
+  <p className="text-sm text-muted-foreground">
+    <strong>{label}:</strong> {value ?? "—"}
+  </p>
+);
 
 export default function EditUserModal({ isOpen, onClose, user, session, onUserUpdated }: EditUserModalProps) {
   const [updatedUser, setUpdatedUser] = useState<ActiveUser | null>(null);
@@ -43,7 +48,7 @@ export default function EditUserModal({ isOpen, onClose, user, session, onUserUp
       });
 
       toast.success("User updated successfully");
-      onUserUpdated(response); // Notify table to refresh
+      onUserUpdated(response);
       onClose();
     } catch (err) {
       toast.error("Error updating user");
@@ -65,39 +70,45 @@ export default function EditUserModal({ isOpen, onClose, user, session, onUserUp
         </DialogHeader>
 
         {/* Non-editable fields */}
-        <div className="grid gap-4">
-          <Label>ID: {user?.id}</Label>
-          <Label>User ID: {user?.user_id}</Label>
-          <Label>Name: {user?.name}</Label>
-          <Label>Email: {user?.email}</Label>
-          <Label>Status: {user?.status}</Label>
-          <Label>Approver: {user?.approver}</Label>
-          <Label>Created: {user?.created_at}</Label>
-          <Label>Updated: {user?.updated_at}</Label>
+        <div className="grid gap-2">
+          <InfoLabel label="ID" value={user?.id} />
+          <InfoLabel label="User ID" value={user?.user_id} />
+          <InfoLabel label="Name" value={user?.name} />
+          <InfoLabel label="Email" value={user?.email} />
+          <InfoLabel label="Status" value={user?.status} />
+          <InfoLabel label="Approver" value={user?.approver} />
+          <InfoLabel label="Created" value={user?.created_at} />
+          <InfoLabel label="Updated" value={user?.updated_at} />
         </div>
 
         {/* Editable Fields */}
         <div className="grid gap-4 mt-6">
-          <Label>Roles</Label>
-          <Input
-            value={updatedUser?.role?.join(", ") || ""}
-            onChange={(e) => handleChange("role", e.target.value)}
-            placeholder="Comma-separated roles"
-          />
+          <div>
+            <label className="text-sm font-medium">Roles</label>
+            <Input
+              value={updatedUser?.role?.join(", ") || ""}
+              onChange={(e) => handleChange("role", e.target.value)}
+              placeholder="Comma-separated roles"
+            />
+          </div>
 
-          <Label>Groups</Label>
-          <Input
-            value={updatedUser?.group?.join(", ") || ""}
-            onChange={(e) => handleChange("group", e.target.value)}
-            placeholder="Comma-separated groups"
-          />
+          <div>
+            <label className="text-sm font-medium">Groups</label>
+            <Input
+              value={updatedUser?.group?.join(", ") || ""}
+              onChange={(e) => handleChange("group", e.target.value)}
+              placeholder="Comma-separated groups"
+            />
+          </div>
 
-          <Label>Accounting Unit</Label>
-          <Input
-            value={updatedUser?.au || ""}
-            onChange={(e) => handleChange("au", e.target.value)}
-            placeholder="Accounting Unit"
-          />
+          <div>
+            <label className="text-sm font-medium">Accounting Unit</label>
+            <Input
+              value={updatedUser?.au || ""}
+              onChange={(e) => handleChange("au", e.target.value)}
+              placeholder="Accounting Unit"
+            />
+          </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-4">
