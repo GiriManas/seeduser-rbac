@@ -12,18 +12,27 @@ import {
   ZAxis as RechartsZAxis,
 } from 'recharts';
 
-// Re-export as JSX components (keeping names short and clean)
+import type {
+  TooltipProps,
+} from 'recharts';
+
+// ✅ Correct JSX-compatible typing
+import type { FunctionComponent } from 'react';
+
+// Explicitly cast to JSX-compatible types
 export const BarChart = RechartsBarChart;
 export const Bar = RechartsBar;
-export const XAxis = RechartsXAxis;
-export const YAxis = RechartsYAxis;
-export const CartesianGrid = RechartsCartesianGrid;
-export const Tooltip = RechartsTooltip;
+export const XAxis = RechartsXAxis as unknown as FunctionComponent<any>;
+export const YAxis = RechartsYAxis as unknown as FunctionComponent<any>;
+export const CartesianGrid = RechartsCartesianGrid as unknown as FunctionComponent<any>;
+export const Tooltip = RechartsTooltip as unknown as FunctionComponent<any>;
 export const ResponsiveContainer = RechartsResponsiveContainer;
 export const Cell = RechartsCell;
 export const ScatterChart = RechartsScatterChart;
 export const Scatter = RechartsScatter;
-export const ZAxis = RechartsZAxis;
+export const ZAxis = RechartsZAxis as unknown as FunctionComponent<any>;
+
+export type { TooltipProps };
 
 
 
@@ -31,25 +40,10 @@ export const ZAxis = RechartsZAxis;
 
 import {
   BarChart,
-  Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell
+  Bar,
+  Cell,
 } from '@/components/ui/chart';
-
-
-
-
-<BarChart data={data}>
-  <XAxis dataKey="name" />
-  <YAxis />
-  <Tooltip />
-  <Bar dataKey="count">
-    {data.map((_, index) => (
-      <Cell key={index} fill={colors[index % colors.length]} />
-    ))}
-  </Bar>
-</BarChart>
