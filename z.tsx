@@ -37,13 +37,47 @@ export type { TooltipProps };
 
 
 
+// src/components/ChartTest.tsx
+'use client';
 
+import React from 'react';
 import {
   BarChart,
+  Bar,
   XAxis,
   YAxis,
+  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Bar,
   Cell,
 } from '@/components/ui/chart';
+
+const sampleData = [
+  { name: 'A', count: 12 },
+  { name: 'B', count: 18 },
+  { name: 'C', count: 5 },
+];
+
+const colors = ['#8884d8', '#82ca9d', '#ffc658'];
+
+const ChartTest = () => {
+  return (
+    <div style={{ width: '100%', height: 300 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={sampleData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Bar dataKey="count">
+            {sampleData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export default ChartTest;
