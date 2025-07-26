@@ -1,48 +1,40 @@
+from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
+from app.configuration import MODEL_HUB, PHI_3_MINI_4K_INSTRUCT, PHI_3_MINI_120K_INSTRUCT
 
-# Path to your model directory
-model_path = "/commons/copra_share/VIPER_NLP/hf_model_hub/qwen2.5_3b"
 
-# Check GPU
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using device: {device}")
+def load_phi_model(MODEL_REF):
+    print("====================LOADING {model} MODEL START ====================".format(model=MODEL_REF))
+    model_dir = MODEL_HUB + MODEL_REF
 
-# Load tokenizer
-tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
 
-# Load model
-model = AutoModelForCausalLM.from_pretrained(
-    model_path,
-    torch_dtype=torch.float16,   # Use float16 for GPU efficiency
-    device_map="auto",           # Automatically select GPU
-    trust_remote_code=True
-)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_dir,
+        trust_remote_code=True,
+        torch_dtype=torch.float16
+    ).cuda()
 
-# Optional: load generation config if available
-try:
-    gen_config = GenerationConfig.from_pretrained(model_path)
-except:
-    gen_config = GenerationConfig()
+    # ---------------- PATCH FOR DynamicCache ----------------
+    if hasattr(model, "prepare_inputs_for_generation"):
+        orig_prepare = model.prepare_inputs_for_generation
 
-# Example prompt
-prompt = "Explain the importance of GPU acceleration in AI models."
+        def patched_prepare_inputs_for_generation(*args, **kwargs):
+            if "past_key_values" in kwargs:
+                pkv = kwargs["past_key_values"]
+                # Add get_max_length dynamically
+                if hasattr(pkv, "get_seq_length") and not hasattr(pkv, "get_max_length"):
+                    pkv.get_max_length = pkv.get_seq_length
+            return orig_prepare(*args, **kwargs)
 
-# Tokenize input
-inputs = tokenizer(prompt, return_tensors="pt").to(device)
+        model.prepare_inputs_for_generation = patched_prepare_inputs_for_generation
+    # --------------------------------------------------------
 
-# Generate output
-with torch.no_grad():
-    output_ids = model.generate(
-        **inputs,
-        max_new_tokens=150,
-        temperature=0.7,
-        top_p=0.9,
-        do_sample=True,
-        pad_token_id=tokenizer.eos_token_id,
-        generation_config=gen_config
-    )
+    gen_config = GenerationConfig.from_pretrained(model_dir)
+    print("====================LOADING {model} MODEL COMPLETE ====================".format(model=MODEL_REF))
+    return tokenizer, model, gen_config
 
-# Decode output
-response = tokenizer.decode(output_ids[0], skip_special_tokens=True)
-print("\nModel Output:\n", response)
+
+# Load 120k model
+tokenizer_phi_3_mini_120k_instruct, model_phi_3_mini_120k_instruct, gen_config_phi_3_mini_120k_instruct = \
+    load_phi_model(PHI_3_MINI_120K_INSTRUCT)
