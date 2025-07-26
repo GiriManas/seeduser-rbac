@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_PATH = "/commons/corpra_share/VIPER_NLP/hf_model_hub/phi-3-mini-120k-instruct"
+MODEL_PATH = "/commons/copra_share/VIPER_NLP/hf_model_hub/phi-3-mini-120k-instruct"
 
 print("Loading model...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, trust_remote_code=True)
@@ -19,16 +19,18 @@ print("Model Loaded.")
 
 prompt = "Write a short poem about the sunrise."
 
-# Tokenize with padding
-inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
+# Tokenize without padding to avoid mismatch
+inputs = tokenizer(prompt, return_tensors="pt", padding=False, truncation=True)
 inputs = {k: v.to(model.device) for k, v in inputs.items()}
 
-# Prepare inputs for generation (fixing attention mask mismatch)
-generation_inputs = model.prepare_inputs_for_generation(inputs["input_ids"], attention_mask=inputs["attention_mask"])
+# Ensure attention mask matches input_ids
+if "attention_mask" not in inputs:
+    inputs["attention_mask"] = torch.ones_like(inputs["input_ids"])
 
 with torch.no_grad():
     output = model.generate(
-        **generation_inputs,
+        input_ids=inputs["input_ids"],
+        attention_mask=inputs["attention_mask"],
         max_new_tokens=150,
         temperature=0.7,
         top_p=0.9,
