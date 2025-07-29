@@ -1,30 +1,40 @@
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig
 
-# Set the path to your local model directory
-model_path = "/commons/copra_share/VIPER_NLP/hf_model_hub/qwen2.5_3b_vl"  # Update if needed
+model_path = "/commons/copra_share/VIPER_NLP/hf_model_hub/qwen2_5_coder"  # your local path
 
-# Load tokenizer and model
-tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True).to("cuda")
+# Load tokenizer
+tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, local_files_only=True)
 
-# Example prompt
-prompt = "Explain quantum entanglement in simple terms."
+# Load model on GPU with float16
+model = AutoModelForCausalLM.from_pretrained(
+    model_path,
+    torch_dtype=torch.float16,
+    device_map={"": "cuda"},  # Explicitly map to GPU
+    trust_remote_code=True,
+    local_files_only=True
+)
 
-# Tokenize and move inputs to the same device as the model
-inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+# Prompt and input encoding
+prompt = "Write a Python function to check if a number is prime."
+inputs = tokenizer(prompt, return_tensors="pt")
+inputs = {k: v.to(model.device) for k, v in inputs.items()}  # Move tensors to GPU
+
+# Optional generation config
+gen_config = GenerationConfig.from_pretrained(model_path, local_files_only=True)
 
 # Generate output
 with torch.no_grad():
-    outputs = model.generate(
+    output = model.generate(
         **inputs,
-        max_new_tokens=150,
+        max_new_tokens=200,
         temperature=0.7,
         top_p=0.9,
         do_sample=True,
-        pad_token_id=tokenizer.pad_token_id
+        generation_config=gen_config
     )
 
-# Decode and print the result
-response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+# Decode and print result
+response = tokenizer.decode(output[0], skip_special_tokens=True)
+print("\n=== MODEL OUTPUT ===")
 print(response)
