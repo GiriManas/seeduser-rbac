@@ -1,40 +1,76 @@
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from fastapi import APIRouter, Query, HTTPException
+from app.schemas import ModelResponse, ModelLlamaRequest, ModelGemmaRequest
+from app.models import LlamaVersionEnum, GemmaVersionEnum
+from app.utils import generate_llama_response, generate_gemma_response
 
-model_path = "/commons/copra_share/VIPER_NLP/hf_model_hub/qwen2_5_coder"  # your local path
+router = APIRouter()
 
-# Load tokenizer
-tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, local_files_only=True)
+# --------------------
+# Thread pool + queue
+# --------------------
+MAX_WORKERS = 4          # number of inference threads
+MAX_QUEUE_SIZE = 20      # max queued requests
+executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
+request_queue = asyncio.Queue(maxsize=MAX_QUEUE_SIZE)
 
-# Load model on GPU with float16
-model = AutoModelForCausalLM.from_pretrained(
-    model_path,
-    torch_dtype=torch.float16,
-    device_map={"": "cuda"},  # Explicitly map to GPU
-    trust_remote_code=True,
-    local_files_only=True
-)
 
-# Prompt and input encoding
-prompt = "Write a Python function to check if a number is prime."
-inputs = tokenizer(prompt, return_tensors="pt")
-inputs = {k: v.to(model.device) for k, v in inputs.items()}  # Move tensors to GPU
+# --------------------
+# Worker loop
+# --------------------
+async def worker():
+    loop = asyncio.get_event_loop()
+    while True:
+        func, args, future = await request_queue.get()
+        try:
+            result = await loop.run_in_executor(executor, func, *args)
+            future.set_result(result)
+        except Exception as e:
+            future.set_exception(e)
+        finally:
+            request_queue.task_done()
 
-# Optional generation config
-gen_config = GenerationConfig.from_pretrained(model_path, local_files_only=True)
 
-# Generate output
-with torch.no_grad():
-    output = model.generate(
-        **inputs,
-        max_new_tokens=200,
-        temperature=0.7,
-        top_p=0.9,
-        do_sample=True,
-        generation_config=gen_config
-    )
+# --------------------
+# Start workers at startup
+# --------------------
+async def start_workers():
+    for _ in range(MAX_WORKERS):
+        asyncio.create_task(worker())
 
-# Decode and print result
-response = tokenizer.decode(output[0], skip_special_tokens=True)
-print("\n=== MODEL OUTPUT ===")
-print(response)
+# Call this once at app startup (from main.py)
+# e.g., app.add_event_handler("startup", start_workers)
+
+
+# --------------------
+# Endpoints
+# --------------------
+@router.post("/gemma", response_model=ModelResponse)
+async def get_gemma_response(
+    model_version: GemmaVersionEnum = Query(..., description="Choose a model version"),
+    model_request: ModelGemmaRequest = None
+):
+    if request_queue.full():
+        raise HTTPException(status_code=429, detail="Too many requests in queue")
+
+    loop = asyncio.get_event_loop()
+    future = loop.create_future()
+    await request_queue.put((generate_gemma_response, (model_version, model_request), future))
+    result = await future
+    return {"message": result}
+
+
+@router.post("/llama", response_model=ModelResponse)
+async def get_llama_response(
+    model_version: LlamaVersionEnum = Query(..., description="Choose a model version"),
+    model_request: ModelLlamaRequest = None
+):
+    if request_queue.full():
+        raise HTTPException(status_code=429, detail="Too many requests in queue")
+
+    loop = asyncio.get_event_loop()
+    future = loop.create_future()
+    await request_queue.put((generate_llama_response, (model_version, model_request), future))
+    result = await future
+    return {"message": result}
