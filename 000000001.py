@@ -1,5 +1,6 @@
 import os
 import torch
+import pandas as pd
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # ========= CACHE FIX =========
@@ -23,7 +24,7 @@ for d in [
 # ========= TORCH DYNAMO SAFETY =========
 import torch._dynamo as dynamo
 dynamo.config.suppress_errors = True
-torch._dynamo.disable()   # disables inductor if it fails
+torch._dynamo.disable()
 
 # ========= MODEL LOADING =========
 MODEL_PATH = "/mnt/nas1/huggingface/gemma-3-27b-it"
@@ -37,29 +38,35 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 print("Model loaded!")
 
-# ========= PROMPTS (replace with your dataset) =========
-prompts = [
-    """Evaluate this summary:
+# ========= LOAD DATA =========
+df = pd.read_csv("your_dataset.csv")  # replace with actual file path
+# Assume df has columns: "transcript", "lama_summary"
 
-    Transcript: customer: welcome to wells fargo ... agent: oh. customer: your call is important...
-    Summary: agent representative customer why am i being transferred...
+prompt_template = """
+Evaluate the following summary against the transcript. 
+Provide a groundedness rating from 1–5 (1 = very inaccurate, 5 = very accurate). 
+Output format:
+[number]
+[short explanation]
 
-    Provide a score from 1–5 for groundedness (accuracy to transcript).
-    Output format:
-    [number]
-    [explanation]
-    """,
+Transcript:
+{source}
 
-    "Summarize Hamlet in one sentence and rate summary groundedness from 1–5.\nTranscript: Hamlet story...",
-    # ... load your 200 prompts here (e.g. from pandas DataFrame)
-]
+Summary:
+{output}
+"""
 
-# ========= BATCH GENERATION =========
-BATCH_SIZE = 2  # tune based on GPU memory
+# ========= BATCH PROCESSING =========
+BATCH_SIZE = 2  # adjust based on GPU memory
 all_outputs = []
 
-for i in range(0, len(prompts), BATCH_SIZE):
-    batch_prompts = prompts[i:i+BATCH_SIZE]
+messages = [
+    prompt_template.format(source=row["transcript"], output=row["lama_summary"])
+    for _, row in df.iterrows()
+]
+
+for i in range(0, len(messages), BATCH_SIZE):
+    batch_prompts = messages[i:i+BATCH_SIZE]
 
     inputs = tokenizer(batch_prompts, return_tensors="pt", padding=True, truncation=True).to(model.device)
 
@@ -74,7 +81,9 @@ for i in range(0, len(prompts), BATCH_SIZE):
     decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)
     all_outputs.extend(decoded)
 
-# ========= SHOW SAMPLE OUTPUTS =========
-print("\n=== Example Outputs ===")
-for i, out in enumerate(all_outputs[:5]):
-    print(f"\nPrompt {i+1} Output:\n{out}\n")
+# ========= SAVE BACK TO DATAFRAME =========
+df["evaluation"] = all_outputs
+df.to_csv("evaluated_dataset.csv", index=False)
+
+print("✅ Completed! Results saved to evaluated_dataset.csv")
+print(df[["transcript", "lama_summary", "evaluation"]].head())
