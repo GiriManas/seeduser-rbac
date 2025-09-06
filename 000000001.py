@@ -47,11 +47,10 @@ print("✅ Model loaded!")
 # ========= LOAD DATA =========
 df = pd.read_csv("your_dataset.csv")  # expects: transcript, lama_summary
 
-# ========= PROMPT TEMPLATE =========
 prompt_template = """
 Evaluate the following summary against the transcript. 
 Provide a groundedness rating from 1–5 (1 = very inaccurate, 5 = very accurate). 
-Output format (strict):
+Output format:
 [number]
 [explanation]
 
@@ -94,17 +93,18 @@ ratings = []
 explanations = []
 
 for text in df["raw_evaluation"]:
-    # Extract rating
-    match = re.search(r"\b([1-5])\b", text)
+    stripped = text.strip()
+
+    # ✅ Only match number at start of output
+    match = re.match(r"^\s*([1-5])\s*(?:\n|$)", stripped)
     rating = int(match.group(1)) if match else None
 
-    # Extract explanation (remove the rating number itself)
+    # ✅ Explanation = everything after rating line
     explanation = ""
     if rating is not None:
-        parts = text.split(str(rating), 1)
-        explanation = parts[-1].strip() if len(parts) > 1 else ""
-    else:
-        explanation = text.strip()
+        parts = stripped.split("\n", 1)
+        if len(parts) > 1:
+            explanation = parts[1].strip()
 
     ratings.append(rating)
     explanations.append(explanation)
@@ -114,10 +114,13 @@ df["explanation"] = explanations
 
 # ========= CLEANUP =========
 def clean_text(t):
-    """Remove messy newlines, extra spaces, and artifacts."""
+    """Remove prompt echoes & tidy spacing."""
     if pd.isna(t):
         return ""
-    return re.sub(r'\s+', ' ', t).replace("Transcript:", "").replace("Summary:", "").strip()
+    t = re.sub(r'\s+', ' ', t)  # normalize spaces/newlines
+    # Remove any repeated prompt markers
+    t = t.replace("Transcript:", "").replace("Summary:", "")
+    return t.strip()
 
 df["explanation"] = df["explanation"].apply(clean_text)
 
