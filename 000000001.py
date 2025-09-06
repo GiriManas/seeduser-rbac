@@ -4,7 +4,7 @@ import torch
 import pandas as pd
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-# ========= FULLY DISABLE TORCHDYNAMO/INDUCTOR =========
+# ========= DISABLE TORCHDYNAMO/INDUCTOR =========
 os.environ["TORCH_COMPILE_DISABLE"] = "1"
 os.environ["TORCHDYNAMO_DISABLE"] = "1"
 os.environ["TORCHINDUCTOR_DISABLE"] = "1"
@@ -13,8 +13,9 @@ import torch._dynamo as dynamo
 dynamo.config.suppress_errors = True
 torch._dynamo.disable()
 
-# ========= CACHE FIX (CUSTOM CACHE DIRS) =========
+# ========= CACHE FIX =========
 BASE_TMP = "/tmp/giri/model-test"
+
 os.environ["TORCHINDUCTOR_CACHE_DIR"] = f"{BASE_TMP}/torchinductor"
 os.environ["TRITON_CACHE_DIR"] = f"{BASE_TMP}/triton"
 os.environ["XDG_CACHE_HOME"] = f"{BASE_TMP}/xdg"
@@ -32,8 +33,8 @@ for d in [
 
 # ========= MODEL LOADING =========
 MODEL_PATH = "/mnt/nas1/huggingface/gemma-3-27b-it"
-print("Loading model and tokenizer...")
 
+print("Loading model and tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_PATH,
@@ -43,14 +44,12 @@ model = AutoModelForCausalLM.from_pretrained(
 print("✅ Model loaded!")
 
 # ========= LOAD DATA =========
-df = pd.read_csv("your_dataset.csv")  # replace with your dataset
-# Must have: transcript, lama_summary columns
+df = pd.read_csv("your_dataset.csv")  # replace with actual dataset
+# Must have columns: transcript, lama_summary
 
 prompt_template = """
-Evaluate the following summary against the transcript.
-Give a groundedness rating from 1–5 (1 = very inaccurate, 5 = very accurate).
-Then provide a short explanation.
-
+Evaluate the following summary against the transcript. 
+Provide a groundedness rating from 1–5 (1 = very inaccurate, 5 = very accurate). 
 Output format:
 [number]
 [explanation]
@@ -78,26 +77,34 @@ for i in range(0, len(messages), BATCH_SIZE):
 
     with torch.inference_mode():
         outputs = model.generate(
-            **inputs,
+            input_ids=inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
             max_new_tokens=256,
-            do_sample=False
+            do_sample=False,
+            temperature=0.0
         )
 
-    decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)
+    # Strip prompt from output → keep only model’s new text
+    decoded = []
+    for j, out in enumerate(outputs):
+        gen_tokens = out[len(inputs["input_ids"][j]):]  # remove prompt
+        decoded_text = tokenizer.decode(gen_tokens, skip_special_tokens=True)
+        decoded.append(decoded_text.strip())
+
     all_outputs.extend(decoded)
 
 df["raw_evaluation"] = all_outputs
 
 # ========= PARSE RATING + EXPLANATION =========
-ratings, explanations = [], []
+ratings = []
+explanations = []
 
 for text in df["raw_evaluation"]:
-    match = re.search(r"\b([1-5])\b", text)
+    match = re.search(r"\b([1-5])\b", text)  # capture score
     rating = int(match.group(1)) if match else None
 
     if rating is not None:
-        # remove only the first occurrence of the rating
-        explanation = text.split(str(rating), 1)[-1].strip()
+        explanation = text.replace(str(rating), "", 1).strip()
     else:
         explanation = text.strip()
 
@@ -108,8 +115,7 @@ df["rating"] = ratings
 df["explanation"] = explanations
 
 # ========= SAVE RESULTS =========
-out_path = "evaluated_dataset.csv"
-df.to_csv(out_path, index=False)
+df.to_csv("evaluated_dataset.csv", index=False)
 
-print(f"🎯 Completed! Results saved to {out_path}")
+print("🎯 Completed! Results saved to evaluated_dataset.csv")
 print(df[["transcript", "lama_summary", "rating", "explanation"]].head())
