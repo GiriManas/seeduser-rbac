@@ -1,4 +1,5 @@
 import os
+import re
 import torch
 import pandas as pd
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -36,18 +37,17 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="auto",
     torch_dtype=torch.bfloat16
 )
-print("Model loaded!")
+print("✅ Model loaded!")
 
 # ========= LOAD DATA =========
-df = pd.read_csv("your_dataset.csv")  # replace with actual file path
-# Assume df has columns: "transcript", "lama_summary"
+df = pd.read_csv("your_dataset.csv")  # replace with actual dataset
+# Columns must include: transcript, lama_summary
 
 prompt_template = """
 Evaluate the following summary against the transcript. 
 Provide a groundedness rating from 1–5 (1 = very inaccurate, 5 = very accurate). 
 Output format:
 [number]
-[short explanation]
 
 Transcript:
 {source}
@@ -57,7 +57,7 @@ Summary:
 """
 
 # ========= BATCH PROCESSING =========
-BATCH_SIZE = 2  # adjust based on GPU memory
+BATCH_SIZE = 2  # adjust for GPU memory
 all_outputs = []
 
 messages = [
@@ -73,17 +73,32 @@ for i in range(0, len(messages), BATCH_SIZE):
     with torch.inference_mode():
         outputs = model.generate(
             **inputs,
-            max_new_tokens=256,
-            do_sample=True,
-            temperature=0.7
+            max_new_tokens=10,   # only need a single number
+            do_sample=False,
+            temperature=0.0
         )
 
-    decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)
-    all_outputs.extend(decoded)
+    # Slice off input tokens to avoid echoing prompt
+    for j, out in enumerate(outputs):
+        gen_tokens = out[inputs["input_ids"].shape[1]:]
+        decoded = tokenizer.decode(gen_tokens, skip_special_tokens=True).strip()
+        all_outputs.append(decoded)
 
-# ========= SAVE BACK TO DATAFRAME =========
-df["evaluation"] = all_outputs
+df["raw_evaluation"] = all_outputs
+
+# ========= PARSE RATING =========
+ratings = []
+
+for text in df["raw_evaluation"]:
+    # Extract first number 1–5
+    match = re.search(r"\b([1-5])\b", text)
+    rating = int(match.group(1)) if match else None
+    ratings.append(rating)
+
+df["rating"] = ratings
+
+# ========= SAVE RESULTS =========
 df.to_csv("evaluated_dataset.csv", index=False)
 
-print("✅ Completed! Results saved to evaluated_dataset.csv")
-print(df[["transcript", "lama_summary", "evaluation"]].head())
+print("🎯 Completed! Results saved to evaluated_dataset.csv")
+print(df[["transcript", "lama_summary", "rating"]].head())
