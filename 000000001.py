@@ -3,17 +3,9 @@ import re
 import torch
 import pandas as pd
 from transformers import AutoTokenizer, AutoModelForCausalLM
-
-# ========= DISABLE TORCHDYNAMO/INDUCTOR =========
-os.environ["TORCH_COMPILE_DISABLE"] = "1"
-os.environ["TORCHDYNAMO_DISABLE"] = "1"
-os.environ["TORCHINDUCTOR_DISABLE"] = "1"
-
 import torch._dynamo as dynamo
-dynamo.config.suppress_errors = True
-torch._dynamo.disable()
 
-# ========= CACHE FIX =========
+# ========= TORCH / CACHE FIX =========
 BASE_TMP = "/tmp/giri/model-test"
 
 os.environ["TORCHINDUCTOR_CACHE_DIR"] = f"{BASE_TMP}/torchinductor"
@@ -21,6 +13,11 @@ os.environ["TRITON_CACHE_DIR"] = f"{BASE_TMP}/triton"
 os.environ["XDG_CACHE_HOME"] = f"{BASE_TMP}/xdg"
 os.environ["HF_HOME"] = f"{BASE_TMP}/huggingface"
 os.environ["TRANSFORMERS_CACHE"] = f"{BASE_TMP}/transformers"
+
+# Fully disable TorchDynamo/Inductor
+os.environ["TORCH_COMPILE_DISABLE"] = "1"
+os.environ["TORCHDYNAMO_DISABLE"] = "1"
+os.environ["TORCHINDUCTOR_DISABLE"] = "1"
 
 for d in [
     os.environ["TORCHINDUCTOR_CACHE_DIR"],
@@ -30,6 +27,10 @@ for d in [
     os.environ["TRANSFORMERS_CACHE"],
 ]:
     os.makedirs(d, exist_ok=True)
+
+# TorchDynamo safety
+dynamo.config.suppress_errors = True
+torch._dynamo.disable()
 
 # ========= MODEL LOADING =========
 MODEL_PATH = "/mnt/nas1/huggingface/gemma-3-27b-it"
@@ -45,7 +46,7 @@ print("✅ Model loaded!")
 
 # ========= LOAD DATA =========
 df = pd.read_csv("your_dataset.csv")  # replace with actual dataset
-# Must have columns: transcript, lama_summary
+# Columns must include: transcript, lama_summary
 
 prompt_template = """
 Evaluate the following summary against the transcript. 
@@ -77,20 +78,13 @@ for i in range(0, len(messages), BATCH_SIZE):
 
     with torch.inference_mode():
         outputs = model.generate(
-            input_ids=inputs["input_ids"],
-            attention_mask=inputs["attention_mask"],
+            **inputs,
             max_new_tokens=256,
             do_sample=False,
             temperature=0.0
         )
 
-    # Strip prompt from output → keep only model’s new text
-    decoded = []
-    for j, out in enumerate(outputs):
-        gen_tokens = out[len(inputs["input_ids"][j]):]  # remove prompt
-        decoded_text = tokenizer.decode(gen_tokens, skip_special_tokens=True)
-        decoded.append(decoded_text.strip())
-
+    decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)
     all_outputs.extend(decoded)
 
 df["raw_evaluation"] = all_outputs
@@ -100,11 +94,13 @@ ratings = []
 explanations = []
 
 for text in df["raw_evaluation"]:
-    match = re.search(r"\b([1-5])\b", text)  # capture score
+    # Extract rating
+    match = re.search(r"\b([1-5])\b", text)
     rating = int(match.group(1)) if match else None
 
+    # Extract explanation (remove the rating number itself)
     if rating is not None:
-        explanation = text.replace(str(rating), "", 1).strip()
+        explanation = text.split(str(rating), 1)[-1].strip()
     else:
         explanation = text.strip()
 
@@ -113,6 +109,15 @@ for text in df["raw_evaluation"]:
 
 df["rating"] = ratings
 df["explanation"] = explanations
+
+# ========= CLEANUP =========
+def clean_text(t):
+    """Remove messy newlines, extra spaces, and artifacts."""
+    if pd.isna(t):
+        return ""
+    return re.sub(r'\s+', ' ', t).replace("Transcript:", "").replace("Summary:", "").strip()
+
+df["explanation"] = df["explanation"].apply(clean_text)
 
 # ========= SAVE RESULTS =========
 df.to_csv("evaluated_dataset.csv", index=False)
