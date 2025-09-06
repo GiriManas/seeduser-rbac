@@ -45,13 +45,13 @@ model = AutoModelForCausalLM.from_pretrained(
 print("✅ Model loaded!")
 
 # ========= LOAD DATA =========
-df = pd.read_csv("your_dataset.csv")  # replace with actual dataset
-# Columns must include: transcript, lama_summary
+df = pd.read_csv("your_dataset.csv")  # expects: transcript, lama_summary
 
+# ========= PROMPT TEMPLATE =========
 prompt_template = """
 Evaluate the following summary against the transcript. 
 Provide a groundedness rating from 1–5 (1 = very inaccurate, 5 = very accurate). 
-Output format:
+Output format (strict):
 [number]
 [explanation]
 
@@ -99,8 +99,10 @@ for text in df["raw_evaluation"]:
     rating = int(match.group(1)) if match else None
 
     # Extract explanation (remove the rating number itself)
+    explanation = ""
     if rating is not None:
-        explanation = text.split(str(rating), 1)[-1].strip()
+        parts = text.split(str(rating), 1)
+        explanation = parts[-1].strip() if len(parts) > 1 else ""
     else:
         explanation = text.strip()
 
