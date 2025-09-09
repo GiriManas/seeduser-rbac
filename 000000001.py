@@ -1,4 +1,4 @@
-# rating_pipeline_llama_v1.py
+# llama_3b_rating_debug.py
 import os
 import re
 import torch
@@ -35,11 +35,11 @@ torch._dynamo.disable()
 # --------------------------
 # CONFIG
 # --------------------------
-MODEL_PATH = "/mnt/nas1/huggingface/llama-3.2-3B-Instruct"   # your LLaMA model
-DATASET_PATH = "your_dataset.csv"                            # input CSV
+MODEL_PATH = "/mnt/nas1/huggingface/llama-3.2-3B-Instruct"
+DATASET_PATH = "your_dataset.csv"
 OUT_PATH = f"{BASE_TMP}/evaluated_llama.csv"
 BATCH_SIZE = 2
-MAX_NEW_TOKENS = 256
+MAX_NEW_TOKENS = 512   # more space for generation
 
 # --------------------------
 # Load model & tokenizer
@@ -47,9 +47,9 @@ MAX_NEW_TOKENS = 256
 print("Loading model and tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
 
-# ensure pad token
+# add pad token if missing
 if tokenizer.pad_token is None:
-    tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_PATH,
@@ -100,20 +100,14 @@ def parse_rating_and_explanation(text: str):
         return None, None
     s = text.strip()
 
-    # case 1: "Rating: 4"
     m = re.search(r"Rating\s*[:\-]?\s*([1-5])", s, re.IGNORECASE)
     if m:
-        rating = int(m.group(1))
-        exp_match = re.search(r"Explanation\s*[:\-]?\s*(.*)", s, re.DOTALL | re.IGNORECASE)
-        explanation = exp_match.group(1).strip() if exp_match else s[m.end():].strip()
-        return rating, explanation
+        return int(m.group(1)), s[m.end():].strip()
 
-    # case 2: digit on first line
     m = re.match(r"^\s*([1-5])\s*(?:\n|$)", s)
     if m:
         return int(m.group(1)), s[m.end():].strip()
 
-    # case 3: Explanation only
     m = re.search(r"Explanation\s*[:\-]?\s*(.*)", s, re.DOTALL | re.IGNORECASE)
     if m:
         return None, m.group(1).strip()
@@ -133,27 +127,47 @@ def clean_explanation(text: str, max_len=800):
 # --------------------------
 all_raw = []
 n = len(df)
-
 for start in range(0, n, BATCH_SIZE):
     batch_df = df.iloc[start:start + BATCH_SIZE]
     prompts = [prompt_template.format(source=row["transcript"], summary=row["lama_summary"]) for _, row in batch_df.iterrows()]
+
+    # DEBUG: print first prompt once
+    if start == 0:
+        print("\n==== DEBUG: SAMPLE PROMPT ====")
+        print(prompts[0])
+        print("==============================\n")
+
     inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True).to(device)
 
-    input_lengths = (inputs["input_ids"] != tokenizer.pad_token_id).sum(dim=1).tolist()
+    pad_id = tokenizer.pad_token_id
+    input_lengths = (inputs["input_ids"] != pad_id).sum(dim=1).tolist()
 
     with torch.inference_mode():
         outputs = model.generate(
             input_ids=inputs["input_ids"],
             attention_mask=inputs["attention_mask"],
             max_new_tokens=MAX_NEW_TOKENS,
-            do_sample=False
+            do_sample=True,          # sampling enabled
+            top_p=0.9,
+            temperature=0.7
         )
 
     for j, out in enumerate(outputs):
         in_len = input_lengths[j]
-        gen_tokens = out[in_len:] if out.shape[0] > in_len else out
-        decoded = tokenizer.decode(gen_tokens, skip_special_tokens=True)
-        all_raw.append(decoded.strip() if decoded.strip() else "[EMPTY]")
+        if out.shape[0] <= in_len:
+            gen_tokens = out
+        else:
+            gen_tokens = out[in_len:]
+
+        decoded = tokenizer.decode(gen_tokens, skip_special_tokens=True).strip()
+
+        # DEBUG: print first decoded output once
+        if start == 0 and j == 0:
+            print("\n==== DEBUG: FIRST DECODED RAW OUTPUT ====")
+            print(repr(decoded))
+            print("=========================================\n")
+
+        all_raw.append(decoded if decoded else "[EMPTY]")
 
 df["raw_evaluation"] = all_raw
 
@@ -161,14 +175,13 @@ df["raw_evaluation"] = all_raw
 # Extract results
 # --------------------------
 ratings, explanations = [], []
-
 for raw in df["raw_evaluation"]:
     rating, explanation = parse_rating_and_explanation(raw)
 
-    if rating is None and raw not in ("[EMPTY]", ""):
-        # Fallback: ask LLaMA again only to extract rating
+    if rating is None and raw and raw != "[EMPTY]":
+        # fallback extraction
         rescue_prompt = f"Extract only the rating (a single digit 1–5) from the following text:\n\n{raw}"
-        inputs = tokenizer(rescue_prompt, return_tensors="pt", padding=True, truncation=True).to(device)
+        inputs = tokenizer(rescue_prompt, return_tensors="pt").to(device)
         with torch.inference_mode():
             rescue_out = model.generate(**inputs, max_new_tokens=16, do_sample=False)
         rescue_decoded = tokenizer.decode(rescue_out[0], skip_special_tokens=True).strip()
@@ -176,8 +189,8 @@ for raw in df["raw_evaluation"]:
         if m:
             rating = int(m.group(1))
 
-    ratings.append(rating)
     explanations.append(clean_explanation(explanation))
+    ratings.append(rating)
 
 df["rating"] = ratings
 df["explanation"] = explanations
