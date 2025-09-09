@@ -18,4 +18,9 @@ device = model.device
 print("Model loaded on", device)
 
 
+inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True).to(device)
+
+
+
+
 
