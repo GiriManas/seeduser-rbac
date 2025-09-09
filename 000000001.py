@@ -1,213 +1,131 @@
-# llama_3b_rating_debug.py
-import os
-import re
 import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from tqdm import tqdm
 import pandas as pd
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import re
 
-# --------------------------
-# ENV / DISABLE COMPILERS
-# --------------------------
-BASE_TMP = "/tmp/giri/model-test"
-os.environ["TORCH_COMPILE_DISABLE"] = "1"
-os.environ["TORCHDYNAMO_DISABLE"] = "1"
-os.environ["TORCHINDUCTOR_DISABLE"] = "1"
+# ----------------------------
+# Config
+# ----------------------------
+MODEL_NAME = "meta-llama/Llama-3.2-3B-Instruct"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+MAX_INPUT_TOKENS = 4000  # keep well within LLaMA context window
 
-os.environ["TORCHINDUCTOR_CACHE_DIR"] = f"{BASE_TMP}/torchinductor"
-os.environ["TRITON_CACHE_DIR"] = f"{BASE_TMP}/triton"
-os.environ["XDG_CACHE_HOME"] = f"{BASE_TMP}/xdg"
-os.environ["HF_HOME"] = f"{BASE_TMP}/huggingface"
-os.environ["TRANSFORMERS_CACHE"] = f"{BASE_TMP}/transformers"
-
-for d in [
-    os.environ["TORCHINDUCTOR_CACHE_DIR"],
-    os.environ["TRITON_CACHE_DIR"],
-    os.environ["XDG_CACHE_HOME"],
-    os.environ["HF_HOME"],
-    os.environ["TRANSFORMERS_CACHE"],
-]:
-    os.makedirs(d, exist_ok=True)
-
-import torch._dynamo as dynamo
-dynamo.config.suppress_errors = True
-torch._dynamo.disable()
-
-# --------------------------
-# CONFIG
-# --------------------------
-MODEL_PATH = "/mnt/nas1/huggingface/llama-3.2-3B-Instruct"
-DATASET_PATH = "your_dataset.csv"
-OUT_PATH = f"{BASE_TMP}/evaluated_llama.csv"
-BATCH_SIZE = 2
-MAX_NEW_TOKENS = 512   # more space for generation
-
-# --------------------------
+# ----------------------------
 # Load model & tokenizer
-# --------------------------
+# ----------------------------
 print("Loading model and tokenizer...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-# add pad token if missing
-if tokenizer.pad_token is None:
-    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+# Fix pad token issue for LLaMA
+tokenizer.pad_token = tokenizer.eos_token
+tokenizer.pad_token_id = tokenizer.eos_token_id
 
 model = AutoModelForCausalLM.from_pretrained(
-    MODEL_PATH,
-    device_map="auto",
-    torch_dtype=torch.bfloat16,
-    local_files_only=True
+    MODEL_NAME,
+    torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+    device_map="auto"
 )
-device = model.device
-print("Model loaded on", device)
+print(f"Model loaded on {DEVICE}")
 
-# --------------------------
-# Read dataset
-# --------------------------
-if os.path.isdir(DATASET_PATH):
-    found = [f for f in os.listdir(DATASET_PATH) if f.lower().endswith(".csv")]
-    if not found:
-        raise SystemExit(f"No .csv found in {DATASET_PATH}")
-    DATASET_PATH = os.path.join(DATASET_PATH, found[0])
-    print("Auto-selected dataset:", DATASET_PATH)
-
-df = pd.read_csv(DATASET_PATH)
-if not {"transcript", "lama_summary"}.issubset(df.columns):
-    raise SystemExit("CSV must have columns: 'transcript' and 'lama_summary'")
-
-# --------------------------
+# ----------------------------
 # Prompt template
-# --------------------------
-prompt_template = """Evaluate the following summary against the transcript.
-Provide a groundedness rating from 1–5 (1 = very inaccurate, 5 = very accurate).
-Do NOT repeat the transcript or summary.
-Output must be ONLY in this format:
-
-Rating: <digit 1-5>
-Explanation: <your explanation>
+# ----------------------------
+PROMPT_TEMPLATE = """
+You are a helpful assistant. Analyze the transcript below and produce a customer service rating
+and explanation.
 
 Transcript:
-{source}
+{transcript}
 
-Summary:
-{summary}
+Respond in this JSON format only:
+{{
+  "rating": <integer between 1 and 5>,
+  "explanation": "<short text explanation>"
+}}
 """
 
-# --------------------------
-# Parser
-# --------------------------
-def parse_rating_and_explanation(text: str):
-    if not text:
-        return None, None
-    s = text.strip()
+# ----------------------------
+# Parse model output
+# ----------------------------
+def parse_rating_and_explanation(text):
+    rating, explanation = None, None
 
-    m = re.search(r"Rating\s*[:\-]?\s*([1-5])", s, re.IGNORECASE)
-    if m:
-        return int(m.group(1)), s[m.end():].strip()
+    try:
+        match = re.search(r'"rating"\s*:\s*(\d+)', text)
+        if match:
+            rating = int(match.group(1))
 
-    m = re.match(r"^\s*([1-5])\s*(?:\n|$)", s)
-    if m:
-        return int(m.group(1)), s[m.end():].strip()
+        match = re.search(r'"explanation"\s*:\s*"(.*?)"', text, re.DOTALL)
+        if match:
+            explanation = match.group(1).strip()
+    except Exception as e:
+        print("Parsing error:", e)
 
-    m = re.search(r"Explanation\s*[:\-]?\s*(.*)", s, re.DOTALL | re.IGNORECASE)
-    if m:
-        return None, m.group(1).strip()
+    return rating, explanation
 
-    return None, s
+# ----------------------------
+# Generate with retry
+# ----------------------------
+def evaluate_record(transcript, retries=2):
+    prompt = PROMPT_TEMPLATE.format(transcript=transcript)
 
-def clean_explanation(text: str, max_len=800):
-    if not text:
-        return ""
-    text = re.sub(r"Transcript:.*?Summary:", "", text, flags=re.DOTALL | re.IGNORECASE)
-    text = re.sub(r"\b1\s*=\s*[^,.\n]*[,.\n]?\s*5\s*=\s*[^,.\n]*", "", text, flags=re.IGNORECASE)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text[:max_len] + (" ..." if len(text) > max_len else "")
+    for attempt in range(retries):
+        try:
+            inputs = tokenizer(
+                prompt,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=MAX_INPUT_TOKENS
+            ).to(DEVICE)
 
-# --------------------------
-# Run model
-# --------------------------
-all_raw = []
-n = len(df)
-for start in range(0, n, BATCH_SIZE):
-    batch_df = df.iloc[start:start + BATCH_SIZE]
-    prompts = [prompt_template.format(source=row["transcript"], summary=row["lama_summary"]) for _, row in batch_df.iterrows()]
+            # Debug input sizes
+            print(f"[DEBUG] tokens={inputs['input_ids'].shape}, non-pad={inputs['attention_mask'].sum().item()}")
 
-    # DEBUG: print first prompt once
-    if start == 0:
-        print("\n==== DEBUG: SAMPLE PROMPT ====")
-        print(prompts[0])
-        print("==============================\n")
+            in_len = inputs["input_ids"].shape[1]
+            out = model.generate(
+                **inputs,
+                max_new_tokens=256,
+                do_sample=False,
+                pad_token_id=tokenizer.pad_token_id,
+                eos_token_id=tokenizer.eos_token_id
+            )
 
-    inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True).to(device)
+            # Safe slicing
+            if out.shape[1] > in_len:
+                gen_tokens = out[:, in_len:]
+            else:
+                gen_tokens = out
 
-    pad_id = tokenizer.pad_token_id
-    input_lengths = (inputs["input_ids"] != pad_id).sum(dim=1).tolist()
+            raw_output = tokenizer.decode(gen_tokens[0], skip_special_tokens=True).strip()
+            rating, explanation = parse_rating_and_explanation(raw_output)
 
-    with torch.inference_mode():
-        outputs = model.generate(
-            input_ids=inputs["input_ids"],
-            attention_mask=inputs["attention_mask"],
-            max_new_tokens=MAX_NEW_TOKENS,
-            do_sample=True,          # sampling enabled
-            top_p=0.9,
-            temperature=0.7
-        )
+            return raw_output, rating, explanation
 
-    for j, out in enumerate(outputs):
-        in_len = input_lengths[j]
-        if out.shape[0] <= in_len:
-            gen_tokens = out
-        else:
-            gen_tokens = out[in_len:]
+        except Exception as e:
+            print(f"[ERROR] Attempt {attempt+1} failed: {e}")
+            if attempt == retries - 1:
+                return "", None, ""
 
-        decoded = tokenizer.decode(gen_tokens, skip_special_tokens=True).strip()
+    return "", None, ""
 
-        # DEBUG: print first decoded output once
-        if start == 0 and j == 0:
-            print("\n==== DEBUG: FIRST DECODED RAW OUTPUT ====")
-            print(repr(decoded))
-            print("=========================================\n")
+# ----------------------------
+# Example run
+# ----------------------------
+if __name__ == "__main__":
+    transcripts = [
+        "Customer called to report a lost credit card. Agent apologized and explained the reissue process clearly."
+    ]
 
-        all_raw.append(decoded if decoded else "[EMPTY]")
+    results = []
+    for t in tqdm(transcripts):
+        raw, rating, explanation = evaluate_record(t)
+        results.append({
+            "raw_evaluation": raw,
+            "rating": rating,
+            "explanation": explanation
+        })
 
-df["raw_evaluation"] = all_raw
-
-# --------------------------
-# Extract results
-# --------------------------
-ratings, explanations = [], []
-for raw in df["raw_evaluation"]:
-    rating, explanation = parse_rating_and_explanation(raw)
-
-    if rating is None and raw and raw != "[EMPTY]":
-        # fallback extraction
-        rescue_prompt = f"Extract only the rating (a single digit 1–5) from the following text:\n\n{raw}"
-        inputs = tokenizer(rescue_prompt, return_tensors="pt").to(device)
-        with torch.inference_mode():
-            rescue_out = model.generate(**inputs, max_new_tokens=16, do_sample=False)
-        rescue_decoded = tokenizer.decode(rescue_out[0], skip_special_tokens=True).strip()
-        m = re.search(r"\b([1-5])\b", rescue_decoded)
-        if m:
-            rating = int(m.group(1))
-
-    explanations.append(clean_explanation(explanation))
-    ratings.append(rating)
-
-df["rating"] = ratings
-df["explanation"] = explanations
-
-# --------------------------
-# Debug print
-# --------------------------
-for i in range(min(3, len(df))):
-    print("---- ROW", i, "----")
-    print("RAW:", repr(df.loc[i, "raw_evaluation"])[:400])
-    print("RATING:", df.loc[i, "rating"])
-    print("EXPLANATION:", df.loc[i, "explanation"][:300])
-    print()
-
-# --------------------------
-# Save
-# --------------------------
-os.makedirs(BASE_TMP, exist_ok=True)
-df.to_csv(OUT_PATH, index=False)
-print("Saved:", OUT_PATH)
+    df = pd.DataFrame(results)
+    print(df)
