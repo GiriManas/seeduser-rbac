@@ -35,16 +35,16 @@ torch._dynamo.disable()
 # --------------------------
 # CONFIG
 # --------------------------
-MODEL_PATH = "/mnt/nas1/huggingface/phi-3-mini-128k-instruct"   # change to your Phi model
-DATASET_PATH = "your_dataset.csv"
-OUT_PATH = f"{BASE_TMP}/evaluated_dataset_phi.csv"
+MODEL_PATH = "/mnt/nas1/huggingface/phi-4-reasoning"        # your Phi model
+DATASET_PATH = "your_dataset.csv"                           # CSV with transcript + lama_summary
+OUT_PATH = f"{BASE_TMP}/evaluated_phi.csv"
 BATCH_SIZE = 2
 MAX_NEW_TOKENS = 256
 
 # --------------------------
 # Load model & tokenizer
 # --------------------------
-print("Loading Phi model and tokenizer...")
+print("Loading model and tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_PATH,
@@ -56,7 +56,7 @@ device = model.device
 print("Model loaded on", device)
 
 # --------------------------
-# Dataset
+# Read dataset
 # --------------------------
 if os.path.isdir(DATASET_PATH):
     found = [f for f in os.listdir(DATASET_PATH) if f.lower().endswith(".csv")]
@@ -67,20 +67,17 @@ if os.path.isdir(DATASET_PATH):
 
 df = pd.read_csv(DATASET_PATH)
 if not {"transcript", "lama_summary"}.issubset(df.columns):
-    raise SystemExit("CSV must contain columns: 'transcript' and 'lama_summary'")
+    raise SystemExit("CSV must have columns: 'transcript' and 'lama_summary'")
 
 # --------------------------
-# Phi prompt template
+# Prompt template
 # --------------------------
-prompt_template = """<|system|>
-You are an evaluator.
-<|user|>
-Evaluate the following summary against the transcript.
+prompt_template = """Evaluate the following summary against the transcript.
 Provide a groundedness rating from 1–5 (1 = very inaccurate, 5 = very accurate).
 Do NOT repeat the transcript or summary.
-Output must be STRICTLY in this format:
+Output must be ONLY in one of the following formats:
 
-Rating: <digit>
+Rating: <digit 1-5>
 Explanation: <your explanation>
 
 Transcript:
@@ -91,86 +88,104 @@ Summary:
 """
 
 # --------------------------
-# Robust parser
+# Parser
 # --------------------------
-def parse_rating_and_explanation(generated_text: str):
-    s = generated_text.strip()
+def parse_rating_and_explanation(text: str):
+    if not text:
+        return None, None
+    s = text.strip()
 
-    # strict "Rating: d" capture
+    # case 1: "Rating: 4"
     m = re.search(r"Rating\s*[:\-]?\s*([1-5])", s, re.IGNORECASE)
     if m:
-        rating = int(m.group(1))
-        explanation = s[m.end():].strip()
-        explanation = re.sub(r"^Explanation\s*[:\-]?\s*", "", explanation, flags=re.IGNORECASE)
-        return rating, explanation
+        return int(m.group(1)), s[m.end():].strip()
 
-    # bare digit at start
+    # case 2: digit on first line
     m = re.match(r"^\s*([1-5])\s*(?:\n|$)", s)
     if m:
-        rating = int(m.group(1))
-        explanation = s[m.end():].strip()
-        return rating, explanation
+        return int(m.group(1)), s[m.end():].strip()
+
+    # case 3: "Explanation:" section
+    m = re.search(r"Explanation\s*[:\-]?\s*(.*)", s, re.DOTALL | re.IGNORECASE)
+    if m:
+        return None, m.group(1).strip()
 
     return None, s
 
-def clean_explanation(text: str, max_len: int = 800):
+def clean_explanation(text: str, max_len=800):
     if not text:
         return ""
+    text = re.sub(r"Transcript:.*?Summary:", "", text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"\b1\s*=\s*[^,.\n]*[,.\n]?\s*5\s*=\s*[^,.\n]*", "", text, flags=re.IGNORECASE)
     text = re.sub(r"\s+", " ", text).strip()
-    if len(text) > max_len:
-        text = text[:max_len] + " ..."
-    return text
+    return text[:max_len] + (" ..." if len(text) > max_len else "")
 
 # --------------------------
-# Retry generator
+# Run model
 # --------------------------
-def generate_with_retry(prompt, max_retries=3):
-    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+all_raw = []
+n = len(df)
+for start in range(0, n, BATCH_SIZE):
+    batch_df = df.iloc[start:start + BATCH_SIZE]
+    prompts = [prompt_template.format(source=row["transcript"], summary=row["lama_summary"]) for _, row in batch_df.iterrows()]
+    inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True).to(device)
 
-    for attempt in range(max_retries):
+    pad_id = tokenizer.pad_token_id if tokenizer.pad_token_id else tokenizer.eos_token_id
+    input_lengths = (inputs["input_ids"] != pad_id).sum(dim=1).tolist()
+
+    with torch.inference_mode():
+        outputs = model.generate(
+            input_ids=inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
+            max_new_tokens=MAX_NEW_TOKENS,
+            do_sample=False
+        )
+
+    for j, out in enumerate(outputs):
+        in_len = input_lengths[j]
+        gen_tokens = out[in_len:] if out.shape[0] > in_len else out
+        decoded = tokenizer.decode(gen_tokens, skip_special_tokens=True)
+        all_raw.append(decoded.strip())
+
+df["raw_evaluation"] = all_raw
+
+# --------------------------
+# Extract results
+# --------------------------
+ratings, explanations = [], []
+for raw in df["raw_evaluation"]:
+    rating, explanation = parse_rating_and_explanation(raw)
+
+    if rating is None:
+        # Fallback: ask Phi again only to extract rating
+        rescue_prompt = f"Extract only the rating (a single digit 1–5) from the following text:\n\n{raw}"
+        inputs = tokenizer(rescue_prompt, return_tensors="pt").to(device)
         with torch.inference_mode():
-            outputs = model.generate(
-                input_ids=inputs["input_ids"],
-                attention_mask=inputs["attention_mask"],
-                max_new_tokens=MAX_NEW_TOKENS,
-                do_sample=False
-            )
-        gen_tokens = outputs[0][inputs["input_ids"].shape[1]:]
-        decoded = tokenizer.decode(gen_tokens, skip_special_tokens=True).strip()
+            rescue_out = model.generate(**inputs, max_new_tokens=16, do_sample=False)
+        rescue_decoded = tokenizer.decode(rescue_out[0], skip_special_tokens=True).strip()
+        m = re.search(r"\b([1-5])\b", rescue_decoded)
+        if m:
+            rating = int(m.group(1))
 
-        rating, explanation = parse_rating_and_explanation(decoded)
-        if rating is not None:
-            return decoded, rating, explanation
-
-        print(f"[WARN] Retry {attempt+1} failed. Raw: {decoded[:120]}")
-
-    # If still failed after retries
-    return decoded, None, None
-
-# --------------------------
-# Main loop
-# --------------------------
-raws, ratings, explanations = [], [], []
-
-for idx, row in df.iterrows():
-    prompt = prompt_template.format(source=row["transcript"], summary=row["lama_summary"])
-    raw, rating, explanation = generate_with_retry(prompt)
-
-    raws.append(raw)
-    ratings.append(rating)
     explanations.append(clean_explanation(explanation))
+    ratings.append(rating)
 
-df["raw_evaluation"] = raws
 df["rating"] = ratings
 df["explanation"] = explanations
 
-# debug sample
+# --------------------------
+# Debug print
+# --------------------------
 for i in range(min(3, len(df))):
     print("---- ROW", i, "----")
-    print("RAW OUTPUT:", repr(df.loc[i, "raw_evaluation"])[:400])
+    print("RAW:", repr(df.loc[i, "raw_evaluation"])[:400])
     print("RATING:", df.loc[i, "rating"])
     print("EXPLANATION:", df.loc[i, "explanation"][:300])
     print()
 
+# --------------------------
+# Save
+# --------------------------
+os.makedirs(BASE_TMP, exist_ok=True)
 df.to_csv(OUT_PATH, index=False)
-print("Saved evaluated CSV to:", OUT_PATH)
+print("Saved:", OUT_PATH)
