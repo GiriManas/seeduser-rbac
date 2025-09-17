@@ -1,38 +1,56 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
-local_model_path = "./path_to_your_saved_model"
+# --------------------------
+# Load model + tokenizer
+# --------------------------
+MODEL_PATH = "/mnt/nas1/huggingface/Llama-4-Scout-17B-16E-Instruct"
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"[INFO] Using device: {device}")
-
-print("[INFO] Loading tokenizer...")
-tokenizer = AutoTokenizer.from_pretrained(local_model_path)
-
-print("[INFO] Loading model in 16-bit (fp16) precision...")
-
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
 model = AutoModelForCausalLM.from_pretrained(
-    local_model_path,
-    torch_dtype=torch.float16,   # Force loading in FP16
-    device_map="auto",           # Automatically place model on GPU
-    max_memory={0: "130GB"}      # Safe limit to avoid hangs
+    MODEL_PATH,
+    device_map="auto",
+    torch_dtype=torch.bfloat16,
+    local_files_only=True
 )
 
-print("[INFO] Model loaded successfully in FP16 mode.")
+# --------------------------
+# Proper LLaMA-4 prompt format
+# --------------------------
+prompt = """<s>[INST] <<SYS>>
+You are an evaluator. Your task is to rate groundedness.
+<</SYS>>
 
-def generate_text(prompt, max_new_tokens=150):
-    inputs = tokenizer(prompt, return_tensors="pt").to(device)
-    outputs = model.generate(
+Transcript:
+The sky is blue and the sun is shining.
+
+Summary:
+The sun is visible.
+
+Give only:
+Rating: <digit 1–5>
+Explanation: <short explanation> [/INST]"""
+
+# --------------------------
+# Tokenize & generate
+# --------------------------
+inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+
+with torch.inference_mode():
+    output = model.generate(
         **inputs,
-        max_new_tokens=max_new_tokens,
-        temperature=0.7,
-        top_k=50,
-        top_p=0.95
+        max_new_tokens=256,   # adjust based on expected output length
+        do_sample=False,      # deterministic
+        temperature=0.0,
+        top_p=1.0
     )
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-if __name__ == "__main__":
-    prompt = "Explain the significance of quantum entanglement."
-    print("[INFO] Generating response...")
-    output = generate_text(prompt)
-    print("\n📝 Generated Output:\n", output)
+# --------------------------
+# Decode cleanly
+# --------------------------
+# Remove the prompt portion, keep only the new tokens
+gen_tokens = output[0][inputs["input_ids"].shape[1]:]
+decoded = tokenizer.decode(gen_tokens, skip_special_tokens=True)
+
+print("=== MODEL RESPONSE ===")
+print(decoded.strip())
