@@ -1,5 +1,38 @@
 <s>[INST] <<SYS>>
 You are an evaluator.
+Your task is to compare the given summary with the transcript and assign a completeness rating.
+Follow the instructions carefully and return output only in the requested format.
+Do not include the transcript or summary in your output.
+<</SYS>>
+
+Definition of Completeness:
+Completeness refers to the extent to which the summary covers all important information from the input context.
+
+STRICT output format (must follow exactly):
+Rating: <digit 1-5>
+Explanation: <short explanation (one or two sentences)>
+
+Transcript:
+{source}
+
+Summary:
+{summary}
+[/INST]
+
+
+
+
+
+
+
+
+
+
+
+
+
+<s>[INST] <<SYS>>
+You are an evaluator.
 Your task is to compare the given summary with the transcript and assign a {metric_name} rating.
 Follow the instructions carefully and return output only in the requested format.
 Do not include the transcript or summary in your output.
