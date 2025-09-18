@@ -1,0 +1,61 @@
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+# --------------------------
+# Model path (replace with your actual one)
+# --------------------------
+MODEL_PATH = "/mnt/nas1/huggingface/llama-4-scout-17b-16e-instruct"
+
+# --------------------------
+# Load tokenizer & model
+# --------------------------
+print("Loading model and tokenizer...")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_PATH,
+    device_map="auto",
+    torch_dtype=torch.bfloat16,
+    local_files_only=True
+)
+device = model.device
+print("Model loaded on", device)
+
+# --------------------------
+# Example input
+# --------------------------
+transcript = "Agent: Hello, thank you for calling support. How may I help you today?\nCustomer: I want to reset my password."
+summary = "The agent greeted the customer and the customer asked to reset their password."
+
+prompt = f"""<s>[INST] <<SYS>>
+You are an evaluator. 
+Your task is to compare the given summary with the transcript and assign a groundedness rating. 
+STRICT output format (must follow exactly):
+Rating: <digit 1-5>
+Explanation: <short explanation (1–2 sentences)>
+<</SYS>>
+
+Transcript:
+{transcript}
+
+Summary:
+{summary}
+[/INST]"""
+
+# --------------------------
+# Tokenize & Generate
+# --------------------------
+inputs = tokenizer(prompt, return_tensors="pt").to(device)
+
+with torch.inference_mode():
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=256,
+        do_sample=False,        # greedy decoding
+        temperature=0.0,        # deterministic
+        eos_token_id=tokenizer.eos_token_id
+    )
+
+decoded = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+
+print("\n---- RAW OUTPUT ----")
+print(decoded)
