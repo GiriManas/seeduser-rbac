@@ -1,3 +1,42 @@
+
+
+
+
+
+
+<s>[INST] <<SYS>>
+You are an evaluator. 
+Return only a rating (digit 1–5) and a short explanation. 
+Do not generate steps, transcripts, or summaries. 
+Do not include any other text.
+<</SYS>>
+
+Transcript:
+{source}
+
+Summary:
+{summary}
+
+STRICT output format (must follow exactly):
+Rating: <digit 1-5>
+Explanation: <short explanation, one or two sentences>
+[/INST]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
