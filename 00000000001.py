@@ -1,3 +1,41 @@
+llama4_prompt_template = """<s>[INST] <<SYS>>
+You are an evaluator.
+Your only task is to compare the given summary with the transcript and assign a groundedness rating.
+Return strictly in the requested format and nothing else.
+Do not generate steps, reasoning, transcripts, or summaries.
+Do not include the prompt, input text, or any other explanations.
+<</SYS>>
+
+Definition of Groundedness:
+Groundedness refers to how well the summary is supported by the content of the transcript.
+A grounded summary should accurately reflect the information in the transcript without introducing unsupported claims.
+
+STRICT output format (must follow exactly, no extra words):
+Rating: <digit 1-5>
+Explanation: <short explanation in one or two sentences>
+[/INST]
+
+Transcript:
+{source}
+
+Summary:
+{summary}
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+#######################################
+
 <s>[INST] <<SYS>>
 You are an evaluator.
 Your task is to compare the given summary with the transcript and assign a completeness rating.
