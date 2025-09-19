@@ -1,3 +1,52 @@
+def generate_text(input_prompt):
+    # input_prompt can be str or list[str]
+    inputs = tokenizer(input_prompt, return_tensors="pt", padding=True, truncation=True).to(device)
+
+    with torch.inference_mode():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=256,
+            do_sample=False,
+            temperature=0.0,
+            eos_token_id=tokenizer.eos_token_id,
+            pad_token_id=tokenizer.pad_token_id,
+        )
+
+    # If multiple prompts were given, decode each separately
+    decoded = [tokenizer.decode(out, skip_special_tokens=True).strip() for out in outputs]
+    
+    # Return a string if input was str, else a list
+    if isinstance(input_prompt, str):
+        return decoded[0]
+    else:
+        return decoded
+        
+        
+        
+        
+
+# Single prompt
+print(generate_text("Hello, how are you?"))
+
+# List of prompts
+prompts = ["What is AI?", "Explain quantum computing.", "Define gravity."]
+responses = generate_text(prompts)
+
+for i, r in zip(prompts, responses):
+    print(f"Q: {i}\nA: {r}\n")
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 <s>[INST] <<SYS>>
