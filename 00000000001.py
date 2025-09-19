@@ -1,5 +1,81 @@
 def generate_text(input_prompt):
     # input_prompt can be str or list[str]
+    inputs = tokenizer(
+        input_prompt,
+        return_tensors="pt",
+        padding=True,
+        truncation=True
+    ).to(device)
+
+    with torch.inference_mode():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=256,
+            do_sample=False,
+            temperature=0.0,
+            eos_token_id=tokenizer.eos_token_id,
+            pad_token_id=tokenizer.pad_token_id,
+        )
+
+    decoded = [tokenizer.decode(out, skip_special_tokens=True).strip() for out in outputs]
+
+    if isinstance(input_prompt, str):
+        return decoded[0]
+    else:
+        return decoded
+        
+
+import pandas as pd
+import os
+
+# Load your input CSV
+df = pd.read_csv("input.csv")
+
+# Add a column for model responses (if not already present)
+if "raw_response" not in df.columns:
+    df["raw_response"] = None
+
+# Process in chunks of 20
+for i in range(0, len(df), 20):
+    batch = df["text"].iloc[i:i+20].tolist()       # 20 prompts as list
+    responses = generate_text(batch)               # list of 20 outputs
+
+    # Store directly into DataFrame
+    df.loc[i:i+len(batch)-1, "raw_response"] = responses
+
+    # Save progress to CSV after each batch
+    df.to_csv("output_with_responses.csv", index=False)
+
+    print(f"✅ Processed rows {i} to {i+len(batch)-1} and saved.")
+
+print("🎉 All done! Results saved to output_with_responses.csv")
+
+
+=====•=••••••••••
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def generate_text(input_prompt):
+    # input_prompt can be str or list[str]
     inputs = tokenizer(input_prompt, return_tensors="pt", padding=True, truncation=True).to(device)
 
     with torch.inference_mode():
