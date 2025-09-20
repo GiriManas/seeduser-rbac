@@ -1,3 +1,38 @@
+<s>[INST] <<SYS>>
+You are an evaluator. 
+Your task is to assess the completeness of the summary compared to the transcript. 
+Completeness means the summary should capture all important information from the transcript.
+
+Return only:
+- A rating (digit 1–5)
+- A short explanation (1–2 sentences)
+
+Do not repeat the transcript or summary. 
+Do not output anything else. 
+<</SYS>>
+
+Transcript:
+{source}
+
+Summary:
+{summary}
+
+STRICT output format (must follow exactly):
+Rating: <digit 1-5>
+Explanation: <short explanation>
+[/INST]
+
+
+
+
+
+
+
+
+
+
+
+
 def generate_text(input_prompt):
     # input_prompt can be str or list[str]
     inputs = tokenizer(
