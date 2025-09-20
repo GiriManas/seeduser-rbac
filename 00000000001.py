@@ -1,5 +1,45 @@
 <s>[INST] <<SYS>>
 You are an evaluator. 
+Your task is to assess the groundedness of the summary compared to the transcript. 
+
+Definition of Groundedness:
+Groundedness refers to how well the summary is supported by the content of the transcript. 
+A grounded summary should accurately reflect the transcript without adding unsupported claims.
+
+Return only:
+- A rating (digit 1–5)
+- A short explanation (1–2 sentences)
+
+Do not repeat the transcript or summary. 
+Do not output anything else. 
+<</SYS>>
+
+Transcript:
+{source}
+
+Summary:
+{summary}
+
+STRICT output format (must follow exactly):
+Rating: <digit 1-5>
+Explanation: <short explanation>
+[/INST]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<s>[INST] <<SYS>>
+You are an evaluator. 
 Your task is to assess the completeness of the summary compared to the transcript. 
 Completeness means the summary should capture all important information from the transcript.
 
