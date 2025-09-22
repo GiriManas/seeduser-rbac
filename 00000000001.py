@@ -1,3 +1,76 @@
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+# --------------------------
+# CONFIG
+# --------------------------
+MODEL_PATH = "/mnt/nas1/huggingface/Llama-4-Maverick-17B-128E-Instruct"  # adjust to your folder
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+print("Loading model...")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_PATH,
+    torch_dtype=torch.bfloat16,
+    device_map="auto",        # automatically place layers across GPUs
+    local_files_only=True
+)
+print("Model loaded ✅")
+
+# --------------------------
+# Prompt (Groundedness Example)
+# --------------------------
+prompt = """<s>[INST] <<SYS>>
+You are an evaluator. 
+Your task is to assess the groundedness of the summary compared to the transcript.
+Groundedness means the summary should accurately reflect the transcript without adding unsupported claims.
+
+Return only:
+Rating: <digit 1-5>
+Explanation: <short explanation, 1–2 sentences>
+<</SYS>>
+
+Transcript:
+The company reported higher quarterly earnings mainly due to increased product sales.
+
+Summary:
+The company achieved record profits due to product sales growth.
+[/INST]
+"""
+
+# --------------------------
+# Generation
+# --------------------------
+inputs = tokenizer(prompt, return_tensors="pt").to(device)
+
+with torch.no_grad():
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=256,          # increase if truncation happens
+        do_sample=False,             # deterministic
+        temperature=0.0,
+        eos_token_id=tokenizer.eos_token_id,
+        pad_token_id=tokenizer.pad_token_id,
+    )
+
+decoded = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+print("\n=== Model Output ===")
+print(decoded)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <s>[INST] <<SYS>>
 You are an evaluator. 
 Your task is to assess the groundedness of the summary compared to the transcript. 
