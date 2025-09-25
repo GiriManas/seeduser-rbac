@@ -1,3 +1,65 @@
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+# CONFIG
+MODEL_PATH = "/mnt/nas1/huggingface/Llama-4-Maverick-17B-128E-Instruct"
+
+print("Loading model...")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
+
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_PATH,
+    torch_dtype=torch.bfloat16,   # safe on H200
+    device_map="auto",            # shard across GPUs
+    local_files_only=True
+)
+print("✅ Model loaded")
+
+# Small test prompt
+prompt = "Hello Maverick, how are you?"
+
+print("\n=== Tokenizing prompt ===")
+inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+print("EOS token id:", tokenizer.eos_token_id)
+print("PAD token id:", tokenizer.pad_token_id)
+print("Input shape:", inputs["input_ids"].shape)
+print("Max position embeddings:", model.config.max_position_embeddings)
+
+print("\n=== Generating output ===")
+with torch.no_grad():
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=32,   # keep very small for debugging
+        do_sample=False,
+        temperature=0.0,
+        eos_token_id=tokenizer.eos_token_id,
+        pad_token_id=tokenizer.pad_token_id,
+    )
+
+print("✅ Generation finished")
+
+decoded = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+print("\n=== Model Output ===")
+print(decoded)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 print("EOS token id:", tokenizer.eos_token_id)
 print("PAD token id:", tokenizer.pad_token_id)
 print("BOS token id:", tokenizer.bos_token_id)
