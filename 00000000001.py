@@ -1,629 +1,85 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
+import signal, sys
 
+# ======================
 # CONFIG
+# ======================
 MODEL_PATH = "/mnt/nas1/huggingface/Llama-4-Maverick-17B-128E-Instruct"
 
-print("Loading model...")
+print("🔄 Loading model...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
 
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_PATH,
-    torch_dtype=torch.bfloat16,   # safe on H200
-    device_map="auto",            # shard across GPUs
+    torch_dtype=torch.bfloat16,
+    device_map="auto",           # shard across GPUs
     local_files_only=True
 )
 print("✅ Model loaded")
 
-# Small test prompt
+# ======================
+# Prompt
+# ======================
 prompt = "Hello Maverick, how are you?"
 
-print("\n=== Tokenizing prompt ===")
 inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+
+print("\n--- Input Info ---")
 print("EOS token id:", tokenizer.eos_token_id)
 print("PAD token id:", tokenizer.pad_token_id)
 print("Input shape:", inputs["input_ids"].shape)
 print("Max position embeddings:", model.config.max_position_embeddings)
 
-print("\n=== Generating output ===")
-with torch.no_grad():
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=32,   # keep very small for debugging
-        do_sample=False,
-        temperature=0.0,
-        eos_token_id=tokenizer.eos_token_id,
-        pad_token_id=tokenizer.pad_token_id,
-    )
+# ======================
+# Timeout Setup
+# ======================
+def handler(signum, frame):
+    print("\n⏱️ Timeout! Generation took too long, aborting.")
+    sys.exit(1)
 
-print("✅ Generation finished")
+signal.signal(signal.SIGALRM, handler)
+signal.alarm(120)   # 2 minutes max
 
-decoded = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
-print("\n=== Model Output ===")
-print(decoded)
+# ======================
+# Debug: GPU memory before generation
+# ======================
+if torch.cuda.is_available():
+    torch.cuda.synchronize()
+    print("\n--- GPU Memory BEFORE ---")
+    print(torch.cuda.memory_summary())
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-print("EOS token id:", tokenizer.eos_token_id)
-print("PAD token id:", tokenizer.pad_token_id)
-print("BOS token id:", tokenizer.bos_token_id)
-print("Input shape:", inputs["input_ids"].shape)
-print("Max position embeddings:", model.config.max_position_embeddings)
-
-
-
-
-
-
-
-
-
-
-
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-
-# --------------------------
-# CONFIG
-# --------------------------
-MODEL_PATH = "/mnt/nas1/huggingface/Llama-4-Maverick-17B-128E-Instruct"  # adjust to your folder
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
-print("Loading model...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_PATH,
-    torch_dtype=torch.bfloat16,
-    device_map="auto",        # automatically place layers across GPUs
-    local_files_only=True
-)
-print("Model loaded ✅")
-
-# --------------------------
-# Prompt (Groundedness Example)
-# --------------------------
-prompt = """<s>[INST] <<SYS>>
-You are an evaluator. 
-Your task is to assess the groundedness of the summary compared to the transcript.
-Groundedness means the summary should accurately reflect the transcript without adding unsupported claims.
-
-Return only:
-Rating: <digit 1-5>
-Explanation: <short explanation, 1–2 sentences>
-<</SYS>>
-
-Transcript:
-The company reported higher quarterly earnings mainly due to increased product sales.
-
-Summary:
-The company achieved record profits due to product sales growth.
-[/INST]
-"""
-
-# --------------------------
+# ======================
 # Generation
-# --------------------------
-inputs = tokenizer(prompt, return_tensors="pt").to(device)
-
-with torch.no_grad():
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=256,          # increase if truncation happens
-        do_sample=False,             # deterministic
-        temperature=0.0,
-        eos_token_id=tokenizer.eos_token_id,
-        pad_token_id=tokenizer.pad_token_id,
-    )
-
-decoded = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
-print("\n=== Model Output ===")
-print(decoded)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<s>[INST] <<SYS>>
-You are an evaluator. 
-Your task is to assess the groundedness of the summary compared to the transcript. 
-
-Definition of Groundedness:
-Groundedness refers to how well the summary is supported by the content of the transcript. 
-A grounded summary should accurately reflect the transcript without adding unsupported claims.
-
-Return only:
-- A rating (digit 1–5)
-- A short explanation (1–2 sentences)
-
-Do not repeat the transcript or summary. 
-Do not output anything else. 
-<</SYS>>
-
-Transcript:
-{source}
-
-Summary:
-{summary}
-
-STRICT output format (must follow exactly):
-Rating: <digit 1-5>
-Explanation: <short explanation>
-[/INST]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<s>[INST] <<SYS>>
-You are an evaluator. 
-Your task is to assess the completeness of the summary compared to the transcript. 
-Completeness means the summary should capture all important information from the transcript.
-
-Return only:
-- A rating (digit 1–5)
-- A short explanation (1–2 sentences)
-
-Do not repeat the transcript or summary. 
-Do not output anything else. 
-<</SYS>>
-
-Transcript:
-{source}
-
-Summary:
-{summary}
-
-STRICT output format (must follow exactly):
-Rating: <digit 1-5>
-Explanation: <short explanation>
-[/INST]
-
-
-
-
-
-
-
-
-
-
-
-
-def generate_text(input_prompt):
-    # input_prompt can be str or list[str]
-    inputs = tokenizer(
-        input_prompt,
-        return_tensors="pt",
-        padding=True,
-        truncation=True
-    ).to(device)
-
-    with torch.inference_mode():
+# ======================
+print("\n🚀 Starting generation...")
+try:
+    with torch.no_grad():
         outputs = model.generate(
             **inputs,
-            max_new_tokens=256,
+            max_new_tokens=16,   # very small for first run
             do_sample=False,
             temperature=0.0,
             eos_token_id=tokenizer.eos_token_id,
             pad_token_id=tokenizer.pad_token_id,
         )
-
-    decoded = [tokenizer.decode(out, skip_special_tokens=True).strip() for out in outputs]
-
-    if isinstance(input_prompt, str):
-        return decoded[0]
-    else:
-        return decoded
-        
-
-import pandas as pd
-import os
-
-# Load your input CSV
-df = pd.read_csv("input.csv")
-
-# Add a column for model responses (if not already present)
-if "raw_response" not in df.columns:
-    df["raw_response"] = None
-
-# Process in chunks of 20
-for i in range(0, len(df), 20):
-    batch = df["text"].iloc[i:i+20].tolist()       # 20 prompts as list
-    responses = generate_text(batch)               # list of 20 outputs
-
-    # Store directly into DataFrame
-    df.loc[i:i+len(batch)-1, "raw_response"] = responses
-
-    # Save progress to CSV after each batch
-    df.to_csv("output_with_responses.csv", index=False)
-
-    print(f"✅ Processed rows {i} to {i+len(batch)-1} and saved.")
-
-print("🎉 All done! Results saved to output_with_responses.csv")
-
-
-=====•=••••••••••
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def generate_text(input_prompt):
-    # input_prompt can be str or list[str]
-    inputs = tokenizer(input_prompt, return_tensors="pt", padding=True, truncation=True).to(device)
-
-    with torch.inference_mode():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=256,
-            do_sample=False,
-            temperature=0.0,
-            eos_token_id=tokenizer.eos_token_id,
-            pad_token_id=tokenizer.pad_token_id,
-        )
-
-    # If multiple prompts were given, decode each separately
-    decoded = [tokenizer.decode(out, skip_special_tokens=True).strip() for out in outputs]
-    
-    # Return a string if input was str, else a list
-    if isinstance(input_prompt, str):
-        return decoded[0]
-    else:
-        return decoded
-        
-        
-        
-        
-
-# Single prompt
-print(generate_text("Hello, how are you?"))
-
-# List of prompts
-prompts = ["What is AI?", "Explain quantum computing.", "Define gravity."]
-responses = generate_text(prompts)
-
-for i, r in zip(prompts, responses):
-    print(f"Q: {i}\nA: {r}\n")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<s>[INST] <<SYS>>
-You are an evaluator. 
-Your task is to assess the completeness of the summary compared to the transcript. 
-Completeness means the summary should capture all important information from the transcript.
-
-Return only a rating (digit 1–5) and a short explanation (1–2 sentences). 
-Do not repeat transcript or summary. 
-Do not output anything else.
-<</SYS>>
-
-Transcript:
-{source}
-
-Summary:
-{summary}
-
-STRICT output format:
-Rating: <digit 1-5>
-Explanation: <short explanation>
-[/INST]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<s>[INST] <<SYS>>
-You are an evaluator. 
-Your task is to assess the completeness of the summary compared to the transcript. 
-Completeness means the summary should capture all important information from the transcript.
-
-Return only a rating (digit 1–5) and a short explanation (1–2 sentences). 
-Do not repeat transcript or summary. 
-Do not output anything else.
-<</SYS>>
-
-Transcript:
-{source}
-
-Summary:
-{summary}
-
-STRICT output format:
-Rating: <digit 1-5>
-Explanation: <short explanation>
-[/INST]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-llama4_prompt_template = """<s>[INST] <<SYS>>
-You are an evaluator.
-Your only task is to compare the given summary with the transcript and assign a groundedness rating.
-Return strictly in the requested format and nothing else.
-Do not generate steps, reasoning, transcripts, or summaries.
-Do not include the prompt, input text, or any other explanations.
-<</SYS>>
-
-Definition of Groundedness:
-Groundedness refers to how well the summary is supported by the content of the transcript.
-A grounded summary should accurately reflect the information in the transcript without introducing unsupported claims.
-
-STRICT output format (must follow exactly, no extra words):
-Rating: <digit 1-5>
-Explanation: <short explanation in one or two sentences>
-[/INST]
-
-Transcript:
-{source}
-
-Summary:
-{summary}
-"""
-
-
-
-
-
-
-
-
-
-
-
-
-
-#######################################
-
-<s>[INST] <<SYS>>
-You are an evaluator.
-Your task is to compare the given summary with the transcript and assign a completeness rating.
-Follow the instructions carefully and return output only in the requested format.
-Do not include the transcript or summary in your output.
-<</SYS>>
-
-Definition of Completeness:
-Completeness refers to the extent to which the summary covers all important information from the input context.
-
-STRICT output format (must follow exactly):
-Rating: <digit 1-5>
-Explanation: <short explanation (one or two sentences)>
-
-Transcript:
-{source}
-
-Summary:
-{summary}
-[/INST]
-
-
-
-
-
-
-
-
-
-
-
-
-
-<s>[INST] <<SYS>>
-You are an evaluator.
-Your task is to compare the given summary with the transcript and assign a {metric_name} rating.
-Follow the instructions carefully and return output only in the requested format.
-Do not include the transcript or summary in your output.
-<</SYS>>
-
-Definition of {metric_name}:
-{metric_definition}
-
-STRICT output format (must follow exactly):
-Rating: <digit {rating_scale}>
-Explanation: <short explanation (one or two sentences)>
-
-Transcript:
-{source}
-
-Summary:
-{summary}
-[/INST]
-
-
-
-
-
-
-
-
-
-
-
-
-
-######################################
-
-
-
-
-
-<s>[INST] <<SYS>>
-You are an evaluator. 
-Return only a rating (digit 1–5) and a short explanation. 
-Do not generate steps, transcripts, or summaries. 
-Do not include any other text.
-<</SYS>>
-
-Transcript:
-{source}
-
-Summary:
-{summary}
-
-STRICT output format (must follow exactly):
-Rating: <digit 1-5>
-Explanation: <short explanation, one or two sentences>
-[/INST]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-
-# --------------------------
-# Model path (replace with your actual one)
-# --------------------------
-MODEL_PATH = "/mnt/nas1/huggingface/llama-4-scout-17b-16e-instruct"
-
-# --------------------------
-# Load tokenizer & model
-# --------------------------
-print("Loading model and tokenizer...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_PATH,
-    device_map="auto",
-    torch_dtype=torch.bfloat16,
-    local_files_only=True
-)
-device = model.device
-print("Model loaded on", device)
-
-# --------------------------
-# Example input
-# --------------------------
-transcript = "Agent: Hello, thank you for calling support. How may I help you today?\nCustomer: I want to reset my password."
-summary = "The agent greeted the customer and the customer asked to reset their password."
-
-prompt = f"""<s>[INST] <<SYS>>
-You are an evaluator. 
-Your task is to compare the given summary with the transcript and assign a groundedness rating. 
-STRICT output format (must follow exactly):
-Rating: <digit 1-5>
-Explanation: <short explanation (1–2 sentences)>
-<</SYS>>
-
-Transcript:
-{transcript}
-
-Summary:
-{summary}
-[/INST]"""
-
-# --------------------------
-# Tokenize & Generate
-# --------------------------
-inputs = tokenizer(prompt, return_tensors="pt").to(device)
-
-with torch.inference_mode():
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=256,
-        do_sample=False,        # greedy decoding
-        temperature=0.0,        # deterministic
-        eos_token_id=tokenizer.eos_token_id
-    )
-
+except Exception as e:
+    print(f"\n❌ Generation error: {e}")
+    sys.exit(1)
+
+signal.alarm(0)   # cancel timeout
+
+# ======================
+# Debug: GPU memory after generation
+# ======================
+if torch.cuda.is_available():
+    torch.cuda.synchronize()
+    print("\n--- GPU Memory AFTER ---")
+    print(torch.cuda.memory_summary())
+
+# ======================
+# Decode
+# ======================
 decoded = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
-
-print("\n---- RAW OUTPUT ----")
+print("\n✅ Model Output:")
 print(decoded)
