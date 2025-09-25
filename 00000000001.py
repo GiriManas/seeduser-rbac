@@ -1,3 +1,19 @@
+print("EOS token id:", tokenizer.eos_token_id)
+print("PAD token id:", tokenizer.pad_token_id)
+print("BOS token id:", tokenizer.bos_token_id)
+print("Input shape:", inputs["input_ids"].shape)
+print("Max position embeddings:", model.config.max_position_embeddings)
+
+
+
+
+
+
+
+
+
+
+
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
