@@ -1,3 +1,31 @@
+# Build the chat in proper format
+messages = [
+    {"role": "system", "content": "You are an evaluator. Return only a rating (digit 1–5), an explanation (1–2 sentences), and a rewritten summary (max 100 words). Do not generate steps, transcripts, or reasoning. Do not include any other text."},
+    {"role": "user", "content": """Transcript:
+Paul Merson has asserted his view on Andros Townsend after his appearance for Tottenham Hotspur in a match against Burnley. Merson stated that Townsend initially struggled but gradually improved and displayed quality, especially in the second half. Townsend had earlier clashed with Paul Ince on Twitter after Ince criticized him for his performance for England against Italy. The disagreement escalated as Townsend hit back, defending his inclusion in the England squad. This incident attracted mixed reactions from fans and pundits. Despite the controversy, Townsend showed promise during the Tottenham match, with Merson acknowledging his effort and contribution.
+
+Summary:
+Andros Townsend, after criticism from Paul Ince regarding his England performance, clashed with him on Twitter. Despite the criticism, Townsend impressed in Tottenham’s match against Burnley, where Paul Merson praised his improvement and quality, especially in the second half.
+
+STRICT output format (must follow exactly):
+Rating: <digit 1–5>
+Explanation: <short explanation, one or two sentences>
+Summary: <concise summary in max 100 words>"""}
+]
+
+# Turn into proper input IDs with chat template
+inputs = tokenizer.apply_chat_template(messages, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu")
+
+# Generate
+output = model.generate(**inputs, max_new_tokens=512, temperature=0.7, top_p=0.9, do_sample=True, repetition_penalty=1.1)
+
+# Decode
+response = tokenizer.decode(output[0], skip_special_tokens=True)
+print(response)
+
+
+
+
 prompt = "<s>[INST] <<SYS>> You are an evaluator. Return only a rating (digit 1–5), an explanation (1–2 sentences), and a rewritten summary (max 100 words). Do not generate steps, transcripts, or reasoning. Do not include any other text. <</SYS>> Transcript: Paul Merson has asserted his view on Andros Townsend after his appearance for Tottenham Hotspur in a match against Burnley. Merson stated that Townsend initially struggled but gradually improved and displayed quality, especially in the second half. Townsend had earlier clashed with Paul Ince on Twitter after Ince criticized him for his performance for England against Italy. The disagreement escalated as Townsend hit back, defending his inclusion in the England squad. This incident attracted mixed reactions from fans and pundits. Despite the controversy, Townsend showed promise during the Tottenham match, with Merson acknowledging his effort and contribution. Summary: Andros Townsend, after criticism from Paul Ince regarding his England performance, clashed with him on Twitter. Despite the criticism, Townsend impressed in Tottenham’s match against Burnley, where Paul Merson praised his improvement and quality, especially in the second half. STRICT output format (must follow exactly): Rating: <digit 1–5> Explanation: <short explanation, one or two sentences> Summary: <concise summary in max 100 words> [/INST]"
 
 
