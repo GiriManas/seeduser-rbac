@@ -1,36 +1,50 @@
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_PATH = "/mnt/nas1/huggingface/Llama-4-Maverick-17B-128E-Instruct"
+model_path = "/path/to/llama-4-scout-17b-instruct"  # update with your local path
 
-print("Loading tokenizer...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
 
-print("Loading model with safe fallback...")
+
 model = AutoModelForCausalLM.from_pretrained(
-    MODEL_PATH,
-    torch_dtype=torch.bfloat16,
-    device_map="auto",         # spread across GPUs
-    offload_folder="offload",  # will store CPU-offloaded tensors here
-    local_files_only=True
+    model_path,
+    torch_dtype=torch.bfloat16,   # safer for big models
+    device_map="auto",            # uses GPU automatically
+    attn_implementation="flash_attention_2",  # faster + longer context
 )
 
-print("✅ Model loaded")
 
-# -------- Test prompt ----------
-prompt = "Hello Maverick, how are you?"
-inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-with torch.no_grad():
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=64,
-        do_sample=False,
-        temperature=0.0,
-        eos_token_id=tokenizer.eos_token_id,
-        pad_token_id=tokenizer.pad_token_id,
-    )
 
-decoded = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
-print("\n=== Model Output ===")
-print(decoded)
+prompt = """
+You are an expert summarizer. Summarize the following transcript clearly:
+
+[INSERT LONG TRANSCRIPT HERE]
+"""
+
+inputs = tokenizer(
+    prompt,
+    return_tensors="pt",
+    truncation=False  # allow long transcripts
+).to("cuda" if torch.cuda.is_available() else "cpu")
+
+
+
+output = model.generate(
+    **inputs,
+    max_new_tokens=2048,     # how much new text to generate
+    temperature=0.7,
+    top_p=0.9,
+    do_sample=True,
+    repetition_penalty=1.1,
+    eos_token_id=tokenizer.eos_token_id,
+)
+
+
+response = tokenizer.decode(output[0], skip_special_tokens=True)
+print(response)
+
+
+
+
+
