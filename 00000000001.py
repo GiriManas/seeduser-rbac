@@ -1,3 +1,10 @@
+prompt = "You are a strict evaluator. Your task is to assess the completeness of the summary compared to the transcript. Completeness means the summary should capture all important information from the transcript. Your output MUST follow this exact format, and nothing else: Rating: <number between 1 and 5> Explanation: <1–2 sentences only> Summary: <concise summary in max 100 words> RULES: - Do NOT output reasoning steps such as 'Step 1', 'Step 2', etc. - Do NOT explain your process. - Do NOT output anything other than Rating, Explanation, and Summary. - If you output anything extra, your answer is invalid. Transcript: Paul Merson has asserted his view on Andros Townsend after his appearance for Tottenham Hotspur in a match against Burnley. Merson stated that Townsend initially struggled but gradually improved and displayed quality, especially in the second half. Townsend had earlier clashed with Paul Ince on Twitter after Ince criticized him for his performance for England against Italy. The disagreement escalated as Townsend hit back, defending his inclusion in the England squad. This incident attracted mixed reactions from fans and pundits. Despite the controversy, Townsend showed promise during the Tottenham match, with Merson acknowledging his effort and contribution. Summary: Andros Townsend, after criticism from Paul Ince regarding his England performance, clashed with him on Twitter. Despite the criticism, Townsend impressed in Tottenham’s match against Burnley, where Paul Merson praised his improvement and quality, especially in the second half."
+
+
+
+
+
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
