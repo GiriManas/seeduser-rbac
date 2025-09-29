@@ -1,3 +1,14 @@
+
+prompt = "Rate the summary below against the transcript. Respond with exactly two lines.\nLine 1: Rating: <digit 1-5>\nLine 2: Explanation: <1-2 sentences>\n\nTranscript: Agent: Hello, thank you for calling support. How may I help you today? Customer: I want to reset my password.\nSummary: The agent greeted the customer and the customer asked to reset their password."
+
+inputs = tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu")
+output = model.generate(**inputs, max_new_tokens=64, temperature=0.0, top_p=1.0, do_sample=False, eos_token_id=tokenizer.eos_token_id)
+response = tokenizer.decode(output[0], skip_special_tokens=True)
+print(response)
+
+
+==========================
+
 prompt = "You are an evaluator. Respond with exactly two lines and nothing else.\nLine 1: Rating: <digit 1-5>\nLine 2: Explanation: <1-2 sentences>\n\nTranscript: Agent: Hello, thank you for calling support. How may I help you today? Customer: I want to reset my password.\nSummary: The agent greeted the customer and the customer asked to reset their password."
 
 inputs = tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu")
