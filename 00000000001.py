@@ -1,3 +1,21 @@
+# Check again with smaller prompt
+
+prompt = """<s>[INST] 
+You are an evaluator. Respond with EXACTLY two lines and nothing else. 
+Line 1: Rating: <digit 1-5>
+Line 2: Explanation: <1-2 sentences>
+
+Transcript:
+Agent: Hello, thank you for calling support. How may I help you today?
+Customer: I want to reset my password.
+
+Summary:
+The agent greeted the customer and the customer asked to reset their password. [/INST]"""
+
+
+
+-------
+
 prompt = """<s>[INST] 
 You are an evaluator. Respond with EXACTLY three lines and nothing else. 
 If you add steps, notes, or any extra words, your answer is invalid. 
