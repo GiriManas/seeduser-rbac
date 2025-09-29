@@ -1,3 +1,13 @@
+prompt = "You are an evaluator. Respond with exactly two lines and nothing else.\nLine 1: Rating: <digit 1-5>\nLine 2: Explanation: <1-2 sentences>\n\nTranscript: Agent: Hello, thank you for calling support. How may I help you today? Customer: I want to reset my password.\nSummary: The agent greeted the customer and the customer asked to reset their password."
+
+inputs = tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu")
+output = model.generate(**inputs, max_new_tokens=64, temperature=0.0, top_p=1.0, do_sample=False, repetition_penalty=1.05, eos_token_id=tokenizer.eos_token_id)
+response = tokenizer.decode(output[0], skip_special_tokens=True)
+print(response)
+
+
+
+########%%%%***]£{++~€€{€€}€€~€€€€{€€
 
 prompt = "<s>[INST] You are an evaluator. Respond with EXACTLY two lines and nothing else. If you add ANY extra words, sentences, or symbols, your answer is INVALID. Line 1: Rating: <digit 1-5> Line 2: Explanation: <1-2 sentences> Transcript: Agent: Hello, thank you for calling support. How may I help you today? Customer: I want to reset my password. Summary: The agent greeted the customer and the customer asked to reset their password. [/INST]"
 
