@@ -1,3 +1,8 @@
+prompt = "<s>[INST] <<SYS>> You are an evaluator. Output exactly two lines ONLY. Format: Rating: <digit 1-5> Explanation: <1-2 sentences> NO additional text. <</SYS>> Transcript: Agent: Hello, thank you for calling support. How may I help you today? Customer: I want to reset my password. Summary: The agent greeted the customer and the customer asked to reset their password. [/INST]"
+
+inputs = tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"); output = model.generate(**inputs, max_new_tokens=64, temperature=0.0, top_p=1.0, do_sample=False, repetition_penalty=1.05, eos_token_id=tokenizer.eos_token_id); response = tokenizer.decode(output[0], skip_special_tokens=True); print("\n".join(re.findall(r"(Rating:.*|Explanation:.*)", response)[:2]))
+
+
 
 prompt = "<s>[INST] <<SYS>> You are an evaluator. Return ONLY the following and nothing else: 1. Rating: <digit 1-5> 2. Explanation: <1-2 sentences> Do not add extra words, sentences, or symbols. <</SYS>> Transcript: Agent: Hello, thank you for calling support. How may I help you today? Customer: I want to reset my password. Summary: The agent greeted the customer and the customer asked to reset their password. [/INST]"
 
