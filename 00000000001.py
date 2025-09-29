@@ -1,3 +1,7 @@
+
+prompt = "<s>[INST] <<SYS>> You are an evaluator. Return ONLY the following and nothing else: 1. Rating: <digit 1-5> 2. Explanation: <1-2 sentences> Do not add extra words, sentences, or symbols. <</SYS>> Transcript: Agent: Hello, thank you for calling support. How may I help you today? Customer: I want to reset my password. Summary: The agent greeted the customer and the customer asked to reset their password. [/INST]"
+
+
 prompt = "<s>[INST] <<SYS>> You are an evaluator. Return ONLY the following and nothing else: 1. Rating: <digit 1-5> 2. Explanation: <1-2 sentences> Do not add extra words, sentences, or symbols. <</SYS>> Transcript: Agent: Hello, thank you for calling support. How may I help you today? Customer: I want to reset my password. Summary: The agent greeted the customer and the customer asked to reset their password. [/INST]"
 
 
