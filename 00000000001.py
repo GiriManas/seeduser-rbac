@@ -1,4 +1,29 @@
 prompt = (
+    "You are an evaluator. Respond with EXACTLY three lines and nothing else. "
+    "If you add steps, notes, or any extra words, your answer is invalid.\n\n"
+    "Line 1: Rating: <digit 1-5>\n"
+    "Line 2: Explanation: <1-2 sentences>\n"
+    "Line 3: Summary: <concise summary in max 100 words>\n\n"
+    "Transcript:\n"
+    "Philippe Coutinho fired Liverpool into the FA Cup semi-finals and made it a night to remember for Jordan Henderson. "
+    "Liverpool's captain provided the 70th-minute assist for Coutinho to break Blackburn Rovers' resistance and secure a 1-0 win "
+    "that set up a Wembley date against Aston Villa a week on Sunday. It has been a traumatic month for Henderson, his partner "
+    "Rebeca gave birth to their second daughter, Alba. The 24-year-old has not slept the night before games. Philippe Coutinho "
+    "was the star of this game.\n\n"
+    "Summary:\n"
+    "Philippe Coutinho scored the winning goal in Liverpool's 1-0 victory over Blackburn Rovers, securing his team a place in "
+    "the FA Cup semi-final. The goal came from an assist by captain Jordan Henderson, who had become a father again just hours "
+    "before the game and had not slept. Coutinho delivered a standout performance, leading the way in several statistical "
+    "categories. The victory was a relief for Liverpool, who had recently lost form and had severe testing in the FA Cup. Rodgers "
+    "praised the team's resilience."
+)
+
+
+
+
+##### 29th Sep 2025  #####
+
+prompt = (
     "You are an evaluator. Return ONLY the following three lines and nothing else:\n"
     "Rating: <digit 1-5>\n"
     "Explanation: <1-2 sentences>\n"
