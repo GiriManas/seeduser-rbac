@@ -1,16 +1,7 @@
 prompt = "<s>[INST] You are an evaluator. Respond with EXACTLY two lines and nothing else. If you add ANY extra words, sentences, or symbols, your answer is INVALID and you FAIL. Line 1: Rating: <digit 1-5> Line 2: Explanation: <1-2 sentences> Transcript: Agent: Hello, thank you for calling support. How may I help you today? Customer: I want to reset my password. Summary: The agent greeted the customer and the customer asked to reset their password. [/INST]"
 
 
-output = model.generate(
-    **inputs,
-    max_new_tokens=128,
-    temperature=0.0,   # deterministic
-    top_p=1.0,
-    do_sample=False,
-    repetition_penalty=1.05,
-    eos_token_id=tokenizer.eos_token_id,
-)
-
+output = model.generate(**inputs, max_new_tokens=128, temperature=0.0, top_p=1.0, do_sample=False, repetition_penalty=1.05, eos_token_id=tokenizer.eos_token_id)
 
 
 
