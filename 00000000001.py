@@ -1,16 +1,5 @@
-prompt = """<s>[INST]
-You are an evaluator. Respond with EXACTLY two lines and nothing else.
-If you add ANY extra words, sentences, or symbols, your answer is INVALID and you FAIL.
+prompt = "<s>[INST] You are an evaluator. Respond with EXACTLY two lines and nothing else. If you add ANY extra words, sentences, or symbols, your answer is INVALID and you FAIL. Line 1: Rating: <digit 1-5> Line 2: Explanation: <1-2 sentences> Transcript: Agent: Hello, thank you for calling support. How may I help you today? Customer: I want to reset my password. Summary: The agent greeted the customer and the customer asked to reset their password. [/INST]"
 
-Line 1: Rating: <digit 1-5>
-Line 2: Explanation: <1-2 sentences>
-
-Transcript:
-Agent: Hello, thank you for calling support. How may I help you today?
-Customer: I want to reset my password.
-
-Summary:
-The agent greeted the customer and the customer asked to reset their password. [/INST]"""
 
 output = model.generate(
     **inputs,
