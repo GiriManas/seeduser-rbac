@@ -1,3 +1,7 @@
+import torch; prompt="<s>[INST] You are an evaluator. Return only the following two lines and nothing else:\nRating: <digit 1-5>\nExplanation: <1-2 sentences>\n\nTranscript:\nAgent: Thank you for calling, how can I help?\nCustomer: I am unable to access my account.\n\nSummary:\nThe customer reported login issues and asked for support. [/INST]"; inputs=tokenizer(prompt, return_tensors="pt"); device="cuda" if torch.cuda.is_available() else "cpu"; inputs={k:v.to(device) for k,v in inputs.items()}; out=model.generate(**inputs, max_new_tokens=64, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id); print(tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True).replace("[INST]","").strip())
+
+
+
 import torch; prompt="<s>[INST] Hello! [/INST]"; inputs=tokenizer(prompt, return_tensors="pt"); device="cuda" if torch.cuda.is_available() else "cpu"; inputs={k:v.to(device) for k,v in inputs.items()}; out=model.generate(**inputs, max_new_tokens=50, do_sample=True, temperature=0.7, top_p=0.9, eos_token_id=tokenizer.eos_token_id); print(tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True))
 
 
