@@ -1,7 +1,13 @@
+import torch; prompt="<s>[INST] Hello! [/INST]"; inputs=tokenizer(prompt, return_tensors="pt"); device="cuda" if torch.cuda.is_available() else "cpu"; inputs={k:v.to(device) for k,v in inputs.items()}; out=model.generate(**inputs, max_new_tokens=50, do_sample=True, temperature=0.7, top_p=0.9, eos_token_id=tokenizer.eos_token_id); print(tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True))
+
+
 import torch; prompt="<s>[INST] Hello! [/INST]"; inputs=tokenizer(prompt, return_tensors="pt"); device="cuda" if torch.cuda.is_available() else "cpu"; inputs={k:v.to(device) for k,v in inputs.items()}; out=model.generate(**inputs, max_new_tokens=50, do_sample=True, temperature=0.7, top_p=0.9, eos_token_id=tokenizer.eos_token_id); print(tokenizer.decode(out[0], skip_special_tokens=True))
 
 
 import torch; prompt="Hello!"; inputs=tokenizer(prompt, return_tensors="pt"); device="cuda" if torch.cuda.is_available() else "cpu"; inputs={k:v.to(device) for k,v in inputs.items()}; out=model.generate(**inputs, max_new_tokens=10, do_sample=False, eos_token_id=tokenizer.eos_token_id); print(tokenizer.decode(out[0], skip_special_tokens=True))
+
+# BASIC steps
+
 
 # Single line for interactive PY
 import re; inputs=tokenizer("<s>[INST] <<SYS>> You are an evaluator. Return ONLY the following and nothing else:\nRating: <digit 1-5>\nExplanation: <1-2 sentences>\nDo NOT generate steps or extra text. <</SYS>>\n\nTranscript:\nAgent: Hello, thank you for calling support. How may I help you today?\nCustomer: I want to reset my password.\n\nSummary:\nThe agent greeted the customer and the customer asked to reset their password. [/INST]", return_tensors="pt", truncation=True); inputs={k:v.to('cuda' if torch.cuda.is_available() else 'cpu') for k,v in inputs.items()}; out=model.generate(**inputs, max_new_tokens=64, do_sample=False, top_p=1.0, temperature=0.0, repetition_penalty=1.05, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id); resp=tokenizer.decode(out[0], skip_special_tokens=True); m=re.search(r"Rating:\s*(\d).*?Explanation:\s*(.+?)(?:\n|$)", resp, flags=re.S|re.I); print(f"Rating: {m.group(1).strip()}\nExplanation: {m.group(2).strip().splitlines()[0]}" if m else resp)
