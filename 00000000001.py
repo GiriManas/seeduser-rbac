@@ -1,4 +1,8 @@
-import torch; from transformers import StoppingCriteria, StoppingCriteriaList; class StopOnToken(StoppingCriteria): def __init__(self, tokenizer, stop_text): self.stop_ids=tokenizer(stop_text, return_tensors="pt")["input_ids"].squeeze().tolist(); def __call__(self, input_ids, scores, **kwargs): return self.stop_ids==input_ids[0][-len(self.stop_ids):].tolist(); prompt="<s>[INST] What is your name? [/INST]"; inputs=tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"); stop=StoppingCriteriaList([StopOnToken(tokenizer,"[/INST]")]); out=model.generate(**inputs, max_new_tokens=50, do_sample=False, temperature=0.0, repetition_penalty=1.2, eos_token_id=tokenizer.eos_token_id, stopping_criteria=stop); print(tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True).strip())
+
+import torch; prompt="<s>[INST] What is your name? [/INST]"; inputs=tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"); out=model.generate(**inputs, max_new_tokens=50, do_sample=False, temperature=0.0, repetition_penalty=1.2, eos_token_id=tokenizer.eos_token_id); resp=tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True).strip(); print(resp.split("[/INST]")[0].strip())
+
+
+
 
 import torch; prompt="<s>[INST] What is your name? [/INST]"; inputs=tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"); out=model.generate(**inputs, max_new_tokens=50, do_sample=False, temperature=0.7, top_p=0.9, repetition_penalty=1.2, eos_token_id=tokenizer.eos_token_id); print(tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True).strip())
 ######### ABOVE REMOVES EXTRA TEXT 
