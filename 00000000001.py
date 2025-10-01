@@ -1,3 +1,7 @@
+import torch; prompt="You are an evaluator. Respond ONLY in this exact format and nothing else:\\nRating: <digit 1-5>\\nExplanation: <1-2 sentences>\\n\\nTranscript:\\nAgent: Thank you for calling, how can I help?\\nCustomer: I am unable to access my account.\\n\\nSummary:\\nThe customer reported login issues and asked for support."; inputs0=tokenizer(prompt, return_tensors="pt"); device=("cuda" if torch.cuda.is_available() else "cpu"); inputs={k:v.to(device) for k,v in inputs0.items()}; out=model.generate(**inputs, max_new_tokens=120, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id); print(tokenizer.decode(out[0, inputs['input_ids'].shape[1]:], skip_special_tokens=True).strip())
+
+
+
 import torch; prompt="You are an evaluator. Respond ONLY in this exact format with no extra text:\nRating: <digit 1-5>\nExplanation: <1-2 sentences>\n\nTranscript:\nAgent: Thank you for calling, how can I help?\nCustomer: I am unable to access my account.\n\nSummary:\nThe customer reported login issues and asked for support."; inputs=tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"); out=model.generate(**inputs,max
 
 
