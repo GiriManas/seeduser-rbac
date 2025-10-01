@@ -1,3 +1,7 @@
+import torch; messages=[{"role":"system","content":"You are an evaluator. Return ONLY in this format:\nRating: <digit 1-5>\nExplanation: <1-2 sentences>\nDo NOT add transcripts, steps, or summaries."},{"role":"user","content":"Transcript:\nAgent: Thank you for calling, how can I help?\nCustomer: I am unable to access my account.\n\nSummary:\nThe customer reported login issues and asked for support."}]; prompt=tokenizer.apply_chat_template(messages,tokenize=False,add_generation_prompt=True); inputs=tokenizer(prompt,return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"); out=model.generate(**inputs,max_new_tokens=100,do_sample=False,temperature=0.0,eos_token_id=tokenizer.eos_token_id); print(tokenizer.decode(out[0][inputs["input_ids"].shape[1]:],skip_special_tokens=True).strip())
+
+
+
 #model loading again
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
