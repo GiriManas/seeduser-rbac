@@ -1,3 +1,9 @@
+import torch; prompt="You are an evaluator. Respond ONLY in this exact format:\nRating: <digit 1-5>\nExplanation: <1-2 sentences>\n\nExample:\nRating: 4\nExplanation: The agent acknowledged the issue clearly.\n\nNow respond for this case:\nTranscript:\nAgent: Thank you for calling, how can I help?\nCustomer: I am unable to access my account.\n\nSummary:\nThe customer reported login issues and asked for support."; inputs=tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"); out=model.generate(**inputs, max_new_tokens=60, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id, stopping_criteria=None); print("\n=== RAW OUTPUT ===\n"+tokenizer.decode(out[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True).strip())
+
+
+
+
+
 
 import torch; prompt="You are an evaluator. Respond ONLY with ONE answer in this exact format:\nRating: <digit 1-5>\nExplanation: <1-2 sentences>\n\nExample:\nRating: 4\nExplanation: The agent acknowledged the issue clearly.\n\nNow do it once for the input below and stop after one answer.\n\nTranscript:\nAgent: Thank you for calling, how can I help?\nCustomer: I am unable to access my account.\n\nSummary:\nThe customer reported login issues and asked for support."; inputs=tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"); out=model.generate(**inputs, max_new_tokens=50, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id); print("\n=== RAW OUTPUT ===\n"+tokenizer.decode(out[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True).strip())
 
