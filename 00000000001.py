@@ -1,3 +1,8 @@
+import torch; prompt="You are an evaluator. Respond ONLY in this format:\nRating: <digit 1-5>\nExplanation: <1-2 sentences>\n\nTranscript:\nAgent: Thank you for calling, how can I help?\nCustomer: I am unable to access my account.\n\nSummary:\nThe customer reported login issues and asked for support."; inputs=tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"); out=model.generate(**inputs, max_new_tokens=80, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id); resp=tokenizer.decode(out[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True); print("=== RAW OUTPUT ===\n"+resp)
+
+
+
+
 import torch; prompt="You are an evaluator. Respond ONLY in this format:\nRating: <digit 1-5>\nExplanation: <1-2 sentences>\n\nTranscript:\nAgent: Thank you for calling, how can I help?\nCustomer: I am unable to access my account.\n\nSummary:\nThe customer reported login issues and asked for support."; inputs=tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"); out=model.generate(**inputs, max_new_tokens=60, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id); resp=tokenizer.decode(out[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True).strip(); lines=[l for l in resp.splitlines() if l.strip().startswith("Rating:") or l.strip().startswith("Explanation:")]; print("=== RAW OUTPUT ===\n"+"\n".join(lines[:2]))
 
 
