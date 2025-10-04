@@ -1,3 +1,8 @@
+from transformers import pipeline; pipe=pipeline("image-text-to-text",model="/path/to/downloaded/Llama-4-Scout-17B-16E-Instruct",device_map="auto",torch_dtype="auto");messages=[{"role":"user","content":[{"type":"text","text":"You are an evaluator. Respond ONLY in this format:\nRating: <digit 1-5>\nExplanation: <1-2 sentences>\nDo NOT add anything else.\n\nTranscript:\nAgent: Thank you for calling, how may I help you?\nCustomer: I want to reset my password.\n\nSummary:\nThe agent greeted the customer and the customer asked to reset their password."}]}];print(pipe(text=messages,max_new_tokens=60)[0]["generated_text"])
+
+
+
+
 print("Rating:" + tokenizer.decode(model.generate(tokenizer.apply_chat_template([{"role":"system","content":"You are an evaluator. Respond ONLY with exactly two lines.\nFormat:\nRating: <digit 1-5>\nExplanation: <1-2 sentences>\nDo not repeat transcript or summary."},{"role":"user","content":"Transcript:\nAgent: Good morning, thank you for contacting us. How may I assist you today?\nCustomer: I’ve been locked out of my account since last night.\nAgent: I see, could you please confirm your registered email address?\nCustomer: Yes, it’s user@example.com\nAgent: Thank you. I’ve reset your access and sent a new temporary password to your email. Please try logging in again.\nCustomer: Got it, I’ll check. Yes, it works now. Thanks a lot!\nSummary:\nThe agent helped the customer regain account access successfully."}], tokenize=True, add_generation_prompt=True, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu"), max_new_tokens=60, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id,)[0], skip_special_tokens=True).replace("Rating:","").splitlines()[0:2]))
 
 
