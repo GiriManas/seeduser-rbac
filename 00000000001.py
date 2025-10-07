@@ -1,5 +1,14 @@
 ####Redit Suggestions
 
+def evaluate_conversation(transcript, summary):
+    prompt = f"Transcript:\n{transcript}\n\nSummary:\n{summary}\n\nNow reply ONLY in valid JSON following this structure:\n{{\"Rating\": <integer between 1 and 5>, \"Explanation\": \"<1-2 short sentences>\"}}\nDo NOT include any other text before or after the JSON.\nRespond strictly in this JSON format only."
+    output = model.generate(**tokenizer(prompt, return_tensors='pt').to(model.device), max_new_tokens=160, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id)
+    print(tokenizer.decode(output[0], skip_special_tokens=True))
+    
+
+
+
+
 print(tokenizer.decode(model.generate(**tokenizer("Transcript:\nAgent: Good morning, thank you for contacting our support desk. How may I help you today?\nCustomer: Hi, my mobile banking app keeps crashing when I try to transfer money.\nAgent: I’m sorry for the inconvenience. Could you tell me which version of the app you’re using?\nCustomer: I’m not sure, but I just updated it yesterday.\nAgent: Thanks. I’ll check for known issues. Meanwhile, please try reinstalling the app and restarting your phone.\nCustomer: Okay, I’ll do that. Will I lose my saved payees if I reinstall?\nAgent: No, your payees are stored in the cloud, so you won’t lose them. Try it and let me know if it works.\nCustomer: Alright, it’s working now. Thank you!\n\nSummary:\nThe agent guided the customer to resolve the app crash issue by suggesting troubleshooting steps, which successfully fixed the problem.\n\nNow reply ONLY in valid JSON following this structure:\n{\"Rating\": <integer between 1 and 5>, \"Explanation\": \"<1-2 short sentences>\"}\nDo NOT include any other text before or after the JSON.\nRespond strictly in this JSON format only.", return_tensors='pt').to(model.device), max_new_tokens=180, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id)[0], skip_special_tokens=True))
 
 
