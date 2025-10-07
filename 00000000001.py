@@ -1,3 +1,7 @@
+####Redit Suggestions
+
+print(tokenizer.decode(model.generate(**tokenizer("Transcript:\nAgent: Thank you for calling, how may I help you?\nCustomer: I want to reset my password.\n\nSummary:\nThe agent greeted the customer and the customer asked to reset their password.\n\nYou are an evaluator. Based on the above conversation, provide your evaluation.\nRespond ONLY in this format:\nRating: <a number between 1 and 5>\nExplanation: <1–2 short sentences>\nReply only with Rating and Explanation — nothing else.", return_tensors='pt').to(model.device), max_new_tokens=80, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id)[0], skip_special_tokens=True))
+
 
 print(tokenizer.decode(model.generate(**tokenizer("You are an evaluator. Respond ONLY in this format:\nRating: <digit 1–5>\nExplanation: <1–2 sentences>\nDo NOT add anything else.\n\nTranscript:\nAgent: Thank you for calling, how may I help you?\nCustomer: I want to reset my password.\n\nSummary:\nThe agent greeted the customer and the customer asked to reset their password.\n\nNow reply strictly in the requested format:", return_tensors="pt").to(model.device), max_new_tokens=80, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id)[0], skip_special_tokens=True))
 
