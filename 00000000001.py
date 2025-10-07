@@ -1,5 +1,40 @@
 ####Redit Suggestions
 
+device = model.device
+
+def get_llm_response(prompt):
+    with torch.no_grad():
+        inputs = tokenizer(prompt, return_tensors="pt").to(device)
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=256,
+            do_sample=False,
+            temperature=0.2,
+            eos_token_id=tokenizer.eos_token_id,
+            pad_token_id=tokenizer.eos_token_id,
+            forced_bos_token_id=tokenizer("{\"Rating\":")["input_ids"][0]
+        )
+        decoded = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+    del outputs
+    torch.cuda.empty_cache()
+    return decoded
+
+
+for i, row in df.iterrows():
+    print("="*20, i, "="*20)
+    transcript = row[TRANSCRIPT_COL]
+    summary = row[SUMMARY_COL]
+    prompt_str = prompt.format(input=transcript, summary=summary)
+    df.at[i, 'prompt'] = prompt_str
+
+    responses = get_llm_response(prompt_str)
+    print("=== RESPONSE ===")
+    print(responses)
+    df.at[i, RAW_RESPONSE_COL] = str(responses)
+
+
+
+
 print(tokenizer.decode(model.generate(**tokenizer("""You are an evaluator. Respond ONLY in valid JSON with exactly {"Rating":<1-5>,"Explanation":"<1-2 sentences>"} and nothing else.\n\nExample 1:\nTranscript: Customer asked for a refund; agent explained the process thoroughly.\nSummary: The agent guided the customer through the refund process.\nResponse: {\"Rating\":5,\"Explanation\":\"Clear and complete guidance; summary accurate.\"}\n\nExample 2:\nTranscript: Agent ignored the customer's core issue and ended the chat.\nSummary: The agent handled the issue.\nResponse: {\"Rating\":2,\"Explanation\":\"Summary is incorrect; agent did not resolve the issue.\"}\n\n=== NOW EVALUATE BELOW ===\nTranscript:\nPaul Merson has restarted his row with Andros Townsend after the Tottenham midfielder was brought on with only seven minutes remaining ... (paste full transcript here)\n\nSummary:\nHe was unable to find a winner as the game ended without a goal. Townsend had clashed with Paul Merson last week over England call-up.\n\nNow reply ONLY with a single JSON object with Rating and Explanation (no other text):""", return_tensors="pt").to(model.device), max_new_tokens=150, do_sample=True, temperature=0.2, repetition_penalty=1.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id)[0], skip_special_tokens=True))
 
 
