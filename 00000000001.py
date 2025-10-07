@@ -1,3 +1,23 @@
+#### Start Again #####
+
+
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+
+# === Load model + tokenizer ===
+model_path = "/mnt/nas1/huggingface/Llama-4-Scout-17B-16E-Instruct"
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+model = AutoModelForCausalLM.from_pretrained(
+    model_path,
+    torch_dtype=torch.bfloat16,   # safer for large models
+    device_map="auto"
+)
+
+
+
+
+####===============####
+
 print(pipe(text=messages, return_full_text=False, max_new_tokens=80, do_sample=False, temperature=0.0, forced_bos_token_id=tokenizer("Rating:")["input_ids"][0])[0]["generated_text"])
 
 
