@@ -1,5 +1,30 @@
 ####Redit Suggestions
 
+# Forcing JSON output
+
+print(tokenizer.decode(model.generate(
+    **tokenizer(
+        "You are an evaluator. Respond ONLY in this strict JSON format:\n"
+        '{"Rating": <integer between 1 and 5>, "Explanation": "<1-2 short sentences>"}\n'
+        "Do not include anything else — no text outside JSON.\n\n"
+        "Transcript:\n"
+        "Agent: Thank you for calling, how may I help you?\n"
+        "Customer: I want to reset my password.\n\n"
+        "Summary:\n"
+        "The agent greeted the customer and the customer asked to reset their password.\n\n"
+        "Now produce only a valid JSON object:\n",
+        return_tensors='pt'
+    ).to(model.device),
+    max_new_tokens=120,
+    do_sample=False,
+    temperature=0.0,
+    repetition_penalty=1.2,
+    eos_token_id=tokenizer.eos_token_id,
+    pad_token_id=tokenizer.eos_token_id
+)[0], skip_special_tokens=True))
+
+
+
 
 print(tokenizer.decode(model.generate(**tokenizer("Transcript:\nAgent: Thank you for calling, how may I help you?\nCustomer: I want to reset my password.\n\nSummary:\nThe agent greeted the customer and the customer asked to reset their password.\n\nYou are an evaluator. Based on the above conversation, respond ONLY in this format:\nRating: <a number between 1 and 5>\nExplanation: <1–2 short sentences>\nReply only with Rating and Explanation — nothing else.\n\nRating:", return_tensors='pt').to(model.device), max_new_tokens=80, do_sample=False, temperature=0.0, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id)[0], skip_special_tokens=True))
 
