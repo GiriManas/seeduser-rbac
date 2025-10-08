@@ -1,5 +1,11 @@
 ####Redit Suggestions
 
+The following conversations may cover completely different topics, tones, or contexts. 
+Follow the JSON structure exactly, but adapt your Rating and Explanation to fit the meaning and tone of the conversation, 
+not the examples above.
+
+
+
 device = model.device
 
 def get_llm_response(prompt):
