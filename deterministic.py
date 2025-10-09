@@ -1,3 +1,27 @@
+def create_default_llama_pipeline(config=None):
+    global DEFAULT_llama_model_, DEFAULT_llama_tokenizer_, DEFAULT_llama_pipeline_, DEFAULT_llama_config_
+
+    if DEFAULT_llama_pipeline_ is None:
+        if config is None:
+            config = DEFAULT_llama_config_
+
+        DEFAULT_llama_pipeline_ = pipeline(
+            "text-generation",
+            model=create_default_llama_model_(),         # CPU -> GPU happens here
+            tokenizer=create_default_llama_tokenizer_(),
+            device=torch.device('cuda', torch.cuda.current_device()),
+            return_full_text=False,
+            do_sample=True,
+            **config
+        )
+
+    return DEFAULT_llama_pipeline_
+
+
+
+
+
+
 @torch.no_grad()
 def predict(self, passage, source):
     premise = " ".join(passage) if isinstance(passage, list) else passage
