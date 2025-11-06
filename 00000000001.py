@@ -1,23 +1,22 @@
-import builtins
-import os
-import sys
-import logging
+#!/bin/bash
 
-# 1️⃣ Disable all print() calls globally (applies to imported modules too)
-builtins.print = lambda *a, **k: None
+# Ask user once before detaching
+echo "Enter your choice (1 or 2): "
+read user_input
 
-# 2️⃣ Remove any old log handlers
-for handler in logging.root.handlers[:]:
-    logging.root.removeHandler(handler)
+# Validate input
+if [[ "$user_input" != "1" && "$user_input" != "2" ]]; then
+    echo "❌ Invalid input. Please enter 1 or 2."
+    exit 1
+fi
 
-# 3️⃣ Limit all logging to CRITICAL only
-logging.basicConfig(level=logging.CRITICAL)
-logging.getLogger().setLevel(logging.CRITICAL)
+# Create a timestamped log file
+timestamp=$(date +"%Y%m%d_%H%M%S")
+logfile="run_${timestamp}.log"
 
-# 4️⃣ Redirect OS-level stdout and stderr (silences C/C++ backend prints)
-sys.stdout.flush()
-sys.stderr.flush()
-devnull = os.open(os.devnull, os.O_WRONLY)
-os.dup2(devnull, 1)
-os.dup2(devnull, 2)
-os.close(devnull)
+# Run the Python script in background with nohup
+nohup bash -c "echo $user_input | python3 main.py" > "$logfile" 2>&1 &
+
+echo "✅ Script started in background."
+echo "📄 Logs: $logfile"
+echo "🔍 To check status: tail -f $logfile"
