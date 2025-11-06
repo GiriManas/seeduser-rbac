@@ -1,22 +1,14 @@
 #!/bin/bash
 
-# Ask user once before detaching
-echo "Enter your choice (1 or 2): "
+echo "Enter your choice (1 or 2 or 9): "
 read user_input
 
-# Validate input
-if [[ "$user_input" != "1" && "$user_input" != "2" ]]; then
-    echo "❌ Invalid input. Please enter 1 or 2."
+if [[ "$user_input" != "1" && "$user_input" != "2" && "$user_input" != "9" ]]; then
+    echo "Invalid input! Please enter 1, 2, or 9."
     exit 1
 fi
 
-# Create a timestamped log file
-timestamp=$(date +"%Y%m%d_%H%M%S")
-logfile="run_${timestamp}.log"
+# Run the Python script with nohup and redirect logs
+nohup python3 run_wrapped_tokenizer.py "$user_input" > run.log 2>&1 &
 
-# Run the Python script in background with nohup
-nohup bash -c "echo $user_input | python3 main.py" > "$logfile" 2>&1 &
-
-echo "✅ Script started in background."
-echo "📄 Logs: $logfile"
-echo "🔍 To check status: tail -f $logfile"
+echo "Process started with input $user_input. Logs are in run.log"
