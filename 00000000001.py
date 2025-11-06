@@ -1,9 +1,8 @@
-import pickle
+import logging
 
-# ✅ Save
-with open("transactions_by_account.pkl", "wb") as f:
-    pickle.dump(transactions_by_account, f)
+# Remove all existing handlers (this is what "force=True" does internally)
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
 
-# ✅ Load later
-with open("transactions_by_account.pkl", "rb") as f:
-    transactions_by_account = pickle.load(f)
+logging.basicConfig(level=logging.CRITICAL)
+logging.getLogger().setLevel(logging.CRITICAL)
