@@ -116,7 +116,32 @@ else:
             for row in rows
         )
         
-        
+
+
+from joblib import Parallel, delayed, parallel_backend
+
+# Thread-optimized execution (no fork)
+if len(batch) == 1:
+    batch_responses = [
+        evaluate_row(
+            evaluator,
+            self.placeholder_columns,
+            batch[0],
+            server
+        )
+    ]
+else:
+    with parallel_backend("threading", n_jobs=4):
+        batch_responses = Parallel()(
+            delayed(evaluate_row)(
+                evaluator,
+                self.placeholder_columns,
+                row,
+                server
+            )
+            for row in batch
+        )
+
         
 
 
