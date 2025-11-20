@@ -115,3 +115,31 @@ else:
             )
             for row in rows
         )
+        
+        
+        
+
+
+
+
+from joblib import Parallel, delayed, parallel_backend
+
+# Thread-optimized execution (no process forking)
+if len(batch) == 1:
+    batch_responses = [
+        transform_response(
+            user_prompt=user_prompt,
+            response_column=response_column,
+            row=batch.iloc[0]
+        )
+    ]
+else:
+    with parallel_backend("threading", n_jobs=4):
+        batch_responses = Parallel()(
+            delayed(transform_response)(
+                user_prompt=user_prompt,
+                response_column=response_column,
+                row=row
+            )
+            for _, row in batch.iterrows()
+        )
