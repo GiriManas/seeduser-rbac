@@ -183,3 +183,6 @@ python - << 'EOF'
 import transformers
 print(transformers.__version__)
 EOF
+
+
+/home/k104630/.local/bin/conda-pack -o /commons/users/k104630/env-setup/jury_api_env_files/testenv_v1-packed.tar.gz
