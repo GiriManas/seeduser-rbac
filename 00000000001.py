@@ -176,3 +176,10 @@ python - << 'EOF'
 from transformers import pipeline
 print("Transformers import OK")
 EOF
+
+
+conda activate /commons/users/u763016/girii/testenv_v1
+python - << 'EOF'
+import transformers
+print(transformers.__version__)
+EOF
