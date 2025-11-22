@@ -168,3 +168,11 @@ else:
             )
             for _, row in batch.iterrows()
         )
+        
+        
+        
+        
+python - << 'EOF'
+from transformers import pipeline
+print("Transformers import OK")
+EOF
