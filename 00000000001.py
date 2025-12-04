@@ -1,31 +1,70 @@
-#!/bin/bash
+import asyncio
+from fastapi import APIRouter, HTTPException
+from fastapi.concurrency import run_in_threadpool
 
-clear
+router = APIRouter()
 
-SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 && pwd -P )"
-cd $SCRIPTPATH/app
-export PYTHONPATH="${SCRIPTPATH}:${PYTHONPATH}"
+@router.post("/evaluate", response_model=dict)
+async def get_evaluate_score(model_request: JuryRequest = None):
 
-rm -rf nohup.out api.log
+    if model_request is None:
+        raise HTTPException(status_code=400, detail="Empty request")
 
-source /apps/mvp/conda/mini-conda-base/anaconda/etc/profile.d/conda.sh
-conda activate /apps/dli_test/conda/jury-on-demand
+    log.info("Incoming Request")
 
-# ---------------------------- DEMO SAFE START ----------------------------
-echo "Starting Gunicorn server on port 5050 with 4 workers..."
+    # Select evaluation metric
+    if model_request.evaluation_config.upper() in ["RAG", "Q&A"]:
+        evaluation_metric = (
+            Metric.GROUNDEDNESS if model_request.evaluation_metrics == "GROUNDEDNESS"
+            else Metric.COMPLETENESS if model_request.evaluation_metrics == "COMPLETENESS"
+            else Metric.RELEVANCE
+        )
 
-nohup gunicorn main:app \
-  --workers 4 \
-  --worker-class uvicorn.workers.UvicornWorker \
-  --bind 0.0.0.0:5050 \
-  --timeout 120 \
-  --graceful-timeout 30 \
-  --log-level info \
-  --access-logfile '-' \
-  --error-logfile '-' \
-  > nohup.out 2>&1 &
-# ---------------------------- DEMO SAFE END ------------------------------
+        async def task():
+            return generate_score_response(
+                evaluation_config=UseCase.RAG,
+                question=model_request.question,
+                context=model_request.context,
+                answer=model_request.answer,
+                evaluation_metric=evaluation_metric
+            )
 
-sleep 2
-ps -ef | grep gunicorn
-tail -f nohup.out
+    elif model_request.evaluation_config.upper() == "SUMMARIZATION":
+        evaluation_metric = (
+            Metric.GROUNDEDNESS if model_request.evaluation_metrics == "GROUNDEDNESS"
+            else Metric.COMPLETENESS if model_request.evaluation_metrics == "COMPLETENESS"
+            else Metric.RELEVANCE
+        )
+
+        async def task():
+            return generate_score_response(
+                evaluation_config=UseCase.SUMMARIZATION,
+                source_document=model_request.source_document,
+                generated_summary=model_request.generated_summary,
+                evaluation_metric=evaluation_metric
+            )
+    else:
+        raise HTTPException(status_code=400, detail="Bad Request")
+
+    try:
+        # 🚀 Offload heavy sync task to threadpool
+        # timeout = 120 seconds (2 mins)
+        response = await asyncio.wait_for(
+            run_in_threadpool(task), timeout=120
+        )
+        log.info("Response sent successfully")
+        return response
+
+    except asyncio.TimeoutError:
+        log.error("Timeout occurred while processing request")
+        raise HTTPException(
+            status_code=504,
+            detail="Processing exceeded time limit (2 minutes)"
+        )
+
+    except Exception as e:
+        log.error(f"Unexpected error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Internal Server Error"
+        )
