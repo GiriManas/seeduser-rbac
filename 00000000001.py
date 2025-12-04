@@ -1,45 +1,18 @@
-import asyncio
-from fastapi.concurrency import run_in_threadpool
+#!/bin/bash
 
+PORT=6060  # change if needed
 
+echo "Stopping server running on port $PORT ..."
 
+# Find process ID using this TCP port
+PID=$(lsof -ti tcp:$PORT)
 
-try:
-    # Offload CPU/blocking work to threadpool & enforce timeout
-    result = await asyncio.wait_for(
-        run_in_threadpool(lambda: response),
-        timeout=120   # 2-minute timeout
-    )
-    log.info("Response Sent Successfully")
-    return result
+if [ -z "$PID" ]; then
+    echo "No server running on port $PORT."
+    exit 0
+fi
 
-except asyncio.TimeoutError:
-    log.error("Timeout occurred while processing request")
-    raise HTTPException(
-        status_code=504,
-        detail="Processing exceeded time limit (2 minutes)"
-    )
-except Exception as e:
-    log.error(f"Unexpected error: {e}")
-    raise HTTPException(
-        status_code=500,
-        detail="Internal Server Error"
-    )
-    
-    
-# Offload heavy sync result handling to threadpool with timeout
-try:
-    result = await asyncio.wait_for(
-        run_in_threadpool(lambda: response),
-        timeout=120
-    )
-    log.info("Response sent successfully")
-    return result
+echo "Killing process: $PID"
+kill -9 $PID
 
-except asyncio.TimeoutError:
-    log.error("Timeout occurred while processing request")
-    raise HTTPException(status_code=504, detail="Processing exceeded time limit (2 minutes)")
-
-except Exception as e:
-    log.error(f"Unexpected error: {e}")
-    raise HTTPException(status_code=500, detail="Internal Server Error")
+echo "Server on port $PORT stopped successfully."
