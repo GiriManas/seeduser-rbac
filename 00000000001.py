@@ -1,18 +1,13 @@
-#!/bin/bash
+import pandas as pd
+from pandas.tseries.offsets import MonthEnd
 
-PORT=6060  # change if needed
+def filter_by_month_range(df, start_ym, end_ym=None, col='transaction_dtm'):
+    # If only one month is provided → filter only that month
+    if end_ym is None:
+        start = pd.Timestamp(start_ym + '-01')
+        end   = start + MonthEnd(1)  # End of given month
+    else:
+        start = pd.Timestamp(start_ym + '-01')
+        end   = pd.Timestamp(end_ym + '-01') + MonthEnd(1)
 
-echo "Stopping server running on port $PORT ..."
-
-# Find process ID using this TCP port
-PID=$(lsof -ti tcp:$PORT)
-
-if [ -z "$PID" ]; then
-    echo "No server running on port $PORT."
-    exit 0
-fi
-
-echo "Killing process: $PID"
-kill -9 $PID
-
-echo "Server on port $PORT stopped successfully."
+    return df[(df[col] >= start) & (df[col] <= end)]
