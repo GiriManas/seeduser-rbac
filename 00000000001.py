@@ -1,24 +1,19 @@
-def normalize_month(token: str) -> str:
-    token = token.strip()
+month_adv_filter = None
+start_ym = None
+end_ym = None
 
-    # Case 1: 'YYYY-MM' or 'MM-YYYY'
-    if "-" in token:
-        parts = token.split("-")
-        if len(parts) != 2:
-            raise ValueError(f"Invalid month format: {token}")
-        a, b = parts[0], parts[1]
+# Multi-month: 2024-11:2025-12 OR 112024:022025
+if ":" in month:
+    start_token, end_token = month.split(":")
+    start_ym = normalize_month(start_token)
+    end_ym   = normalize_month(end_token)
+    month_adv_filter = f"{start_ym}:{end_ym}"
 
-        if len(a) == 4 and len(b) in (1, 2):   # '2024-10'
-            year, month = a, b
-        elif len(b) == 4 and len(a) in (1, 2): # '10-2024'
-            year, month = b, a
-        else:
-            raise ValueError(f"Invalid month format: {token}")
+# Single month: 102024 / 2024-10 / 10-2024
+else:
+    start_ym = normalize_month(month)
+    end_ym = None
+    month_adv_filter = start_ym
 
-    else:
-        if len(token) != 6 or not token.isdigit():
-            raise ValueError(f"Invalid month format: {token}")
-        month, year = token[:2], token[2:]
-
-    month = month.zfill(2)
-    return f"{year}-{month}"
+# Retain month_idx ONLY if other parts of script still need it
+month_idx = int(start_ym[-2:])
