@@ -1,21 +1,24 @@
-import pandas as pd
-from pandas.tseries.offsets import MonthEnd
+def normalize_month(token: str) -> str:
+    token = token.strip()
 
-def filter_by_month_range(df, start_ym, end_ym=None, col='transaction_dtm'):
-    # If only one month is provided → filter only that month
-    if end_ym is None:
-        start = pd.Timestamp(start_ym + '-01')
-        end   = start + MonthEnd(1)  # End of given month
+    # Case 1: 'YYYY-MM' or 'MM-YYYY'
+    if "-" in token:
+        parts = token.split("-")
+        if len(parts) != 2:
+            raise ValueError(f"Invalid month format: {token}")
+        a, b = parts[0], parts[1]
+
+        if len(a) == 4 and len(b) in (1, 2):   # '2024-10'
+            year, month = a, b
+        elif len(b) == 4 and len(a) in (1, 2): # '10-2024'
+            year, month = b, a
+        else:
+            raise ValueError(f"Invalid month format: {token}")
+
     else:
-        start = pd.Timestamp(start_ym + '-01')
-        end   = pd.Timestamp(end_ym + '-01') + MonthEnd(1)
+        if len(token) != 6 or not token.isdigit():
+            raise ValueError(f"Invalid month format: {token}")
+        month, year = token[:2], token[2:]
 
-    return df[(df[col] >= start) & (df[col] <= end)]
-    
-    
-
-# Automatically filters from 2025-10-01 → 2025-10-31 23:59:59
-df_oct2025 = filter_by_month_range(df, '2025-10')
-
-# Works seamlessly over year boundaries. Includes all timestamps in those months
-df_nov24_to_dec25 = filter_by_month_range(df, '2024-11', '2025-12')
+    month = month.zfill(2)
+    return f"{year}-{month}"
