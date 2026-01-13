@@ -1,3 +1,44 @@
+N = 100  # ratio
+
+nonfraud_idxs = group.index[group['frd_tag'] == 0].tolist()
+
+# ✅ NEW: only non-fraud rows that occur BEFORE at least one fraud
+if fraud_indices:
+    max_fraud_idx = max(fraud_indices)
+    eligible_nonfraud = [i for i in nonfraud_idxs if i < max_fraud_idx]
+else:
+    eligible_nonfraud = []
+
+sample_size = min(
+    len(eligible_nonfraud),
+    max(1, len(fraud_indices) * N)
+)
+
+if sample_size > 0:
+    sampled_nonfraud = np.random.choice(
+        eligible_nonfraud,
+        size=sample_size,
+        replace=False
+    )
+else:
+    sampled_nonfraud = []
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 selected_row_indices = set()
 
 group = group.reset_index()  # keep original index
