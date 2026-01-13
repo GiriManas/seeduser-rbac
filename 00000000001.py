@@ -1,88 +1,57 @@
-N = 100  # ratio
+# up to here: dtype conversion, timestamp parsing, sorting
 
-nonfraud_idxs = group.index[group['frd_tag'] == 0].tolist()
+# line 123
+# account_groups = working_df.groupby(account_id_col)
+# ⛔ do NOT use this anymore
 
-# ✅ NEW: only non-fraud rows that occur BEFORE at least one fraud
-if fraud_indices:
-    max_fraud_idx = max(fraud_indices)
-    eligible_nonfraud = [i for i in nonfraud_idxs if i < max_fraud_idx]
-else:
-    eligible_nonfraud = []
+# ✅ WINDOW-BASED LOGIC STARTS HERE
+working_df = working_df.sort_values(
+    [account_id_col, timestamp_col]
+).reset_index(drop=True)
 
-sample_size = min(
-    len(eligible_nonfraud),
-    max(1, len(fraud_indices) * N)
+working_df['fraud_block'] = (
+    working_df
+    .groupby(account_id_col)['frd_tag']
+    .cumsum()
 )
 
-if sample_size > 0:
-    sampled_nonfraud = np.random.choice(
-        eligible_nonfraud,
-        size=sample_size,
-        replace=False
+working_df['row_in_block'] = (
+    working_df
+    .groupby([account_id_col, 'fraud_block'])
+    .cumcount()
+)
+
+# Fraud + 4 prior rows
+fraud_window_df = working_df[
+    (working_df['frd_tag'] == 1) |
+    (
+        (working_df['fraud_block'] > 0) &
+        (working_df['row_in_block'] <= 4)
     )
-else:
-    sampled_nonfraud = []
+]
 
+# 1:N non-fraud sampling
+N = 100
 
+eligible_nonfraud = working_df[
+    (working_df['frd_tag'] == 0) &
+    (working_df['fraud_block'] > 0)
+]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-selected_row_indices = set()
-
-group = group.reset_index()  # keep original index
-
-fraud_indices = group.index[group['frd_tag'] == 1].tolist()
-
-for idx in fraud_indices:
-    selected_row_indices.add(group.loc[idx, 'index'])  # fraud row
-
-    count = 0
-    j = idx - 1
-    while j >= 0 and count < 4:
-        if group.loc[j, 'frd_tag'] == 1:
-            break
-        selected_row_indices.add(group.loc[j, 'index'])
-        count += 1
-        j -= 1
-        
-        
-import numpy as np
-
-N = 100  # ratio
-
-nonfraud_idxs = group.index[group['frd_tag'] == 0].tolist()
-
-sample_size = max(1, len(fraud_indices) * N)
-sample_size = min(sample_size, len(nonfraud_idxs))
-
-sampled_nonfraud = np.random.choice(
-    nonfraud_idxs,
-    size=sample_size,
-    replace=False
+sampled_nonfraud = (
+    eligible_nonfraud
+    .groupby(account_id_col, group_keys=False)
+    .apply(lambda x: x.sample(
+        n=min(len(x), max(1, (x['frd_tag'] == 1).sum() * N)),
+        random_state=42
+    ))
 )
 
-for idx in sampled_nonfraud:
-    selected_row_indices.add(group.loc[idx, 'index'])
+final_df = (
+    pd.concat([fraud_window_df, sampled_nonfraud])
+    .drop_duplicates()
+    .sort_values([account_id_col, timestamp_col])
+    .reset_index(drop=True)
+)
 
-    count = 0
-    j = idx - 1
-    while j >= 0 and count < 4:
-        if group.loc[j, 'frd_tag'] == 1:
-            break
-        selected_row_indices.add(group.loc[j, 'index'])
-        count += 1
-        j -= 1
-        
-return working_df.loc[sorted(selected_row_indices)].reset_index(drop=True)
+return final_df
