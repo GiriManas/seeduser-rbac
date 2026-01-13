@@ -1,118 +1,134 @@
-import os
-import time
-import numpy as np
-import torch
-from tabpfn import TabPFNClassifier
+import pandas as pd
+from typing import Dict
 
 
-def main():
-    # --------------------------------------------------
-    # Environment (offline + NAS)
-    # --------------------------------------------------
-    os.environ["HF_HOME"] = "/mnt/nas1/giri/huggingface"
-    os.environ["TRANSFORMERS_OFFLINE"] = "1"
-    os.environ["TABPFN_OFFLINE"] = "1"
+def convert_tabular_to_fraud_transactions(
+    df: pd.DataFrame,
+    account_id_col: str,
+    column_types: Dict[str, str],
+    timestamp_col: str = None,
+    sort_by_time: bool = True,
+    N: int = 100,
+    random_state: int = 42
+) -> pd.DataFrame:
+    """
+    Extract fraud transactions with up to 4 prior transactions and
+    sample 1:N non-fraud transactions per account.
 
-    CKPT_PATH = (
-        "/mnt/nas1/giri/huggingface/tabpfn_2_5/"
-        "tabpfn-v2.5-classifier-v2.5_default.ckpt"
-    )
+    Returns a DataFrame with the SAME structure as input df.
+    """
 
-    # --------------------------------------------------
-    # GPU sanity check
-    # --------------------------------------------------
-    print("Torch version:", torch.__version__)
-    print("CUDA available:", torch.cuda.is_available())
+    # ------------------------------------------------------------------
+    # 1. Work on a copy
+    # ------------------------------------------------------------------
+    working_df = df.copy()
 
-    if not torch.cuda.is_available():
-        raise RuntimeError("CUDA not available in this pod")
+    # ------------------------------------------------------------------
+    # 2. Type conversions (as per specification)
+    # ------------------------------------------------------------------
+    for col, dtype in column_types.items():
+        if col not in working_df.columns:
+            continue
 
-    print("GPU:", torch.cuda.get_device_name(0))
+        dtype = dtype.lower()
 
-    # --------------------------------------------------
-    # Simulated transaction data
-    # --------------------------------------------------
-    np.random.seed(42)
-    n = 1000
+        if dtype in ("int", "integer"):
+            working_df[col] = pd.to_numeric(
+                working_df[col], errors="coerce"
+            ).astype("Int64")
 
-    amount = np.random.lognormal(mean=7.5, sigma=1.0, size=n)
-    time_since_last_txn = np.random.exponential(scale=300, size=n)
-    txn_count_24h = np.random.poisson(lam=3, size=n)
-    balance_before = np.random.lognormal(mean=8.0, sigma=1.2, size=n)
+        elif dtype in ("float", "double"):
+            working_df[col] = pd.to_numeric(
+                working_df[col], errors="coerce"
+            )
 
-    X = np.column_stack([
-        amount,
-        np.log1p(amount),
-        time_since_last_txn,
-        txn_count_24h,
-        balance_before,
-        balance_before - amount
-    ])
+        elif dtype in ("str", "string", "text"):
+            working_df[col] = working_df[col].astype("string")
 
-    y = (
-        (amount > np.percentile(amount, 95))
-        & (time_since_last_txn < 60)
-        & (txn_count_24h > 3)
-    ).astype(int)
+        elif dtype in ("date", "datetime", "timestamp"):
+            working_df[col] = pd.to_datetime(
+                working_df[col], errors="coerce"
+            )
 
-    noise_idx = np.random.choice(n, size=int(0.05 * n), replace=False)
-    y[noise_idx] = 1 - y[noise_idx]
+    # ------------------------------------------------------------------
+    # 3. Sort by account + time (REQUIRED for window logic)
+    # ------------------------------------------------------------------
+    if sort_by_time:
+        if timestamp_col is None:
+            raise ValueError("timestamp_col must be provided when sort_by_time=True")
 
-    # --------------------------------------------------
-    # Model load (GPU)
-    # --------------------------------------------------
-    t0 = time.perf_counter()
-    clf = TabPFNClassifier(
-        device="cuda",           # 🔥 GPU enabled
-        model_path=CKPT_PATH
-    )
-    t1 = time.perf_counter()
-    print(f"⏱ Model load time (GPU): {t1 - t0:.3f}s")
+        working_df = (
+            working_df
+            .sort_values([account_id_col, timestamp_col])
+            .reset_index(drop=True)
+        )
 
-    # --------------------------------------------------
-    # Warm-up (VERY IMPORTANT for GPU timing)
-    # --------------------------------------------------
-    clf.fit(X[:50], y[:50])
-    _ = clf.predict(X[:50])
-    torch.cuda.synchronize()
+    # ------------------------------------------------------------------
+    # 4. Window logic (fraud blocks)
+    # ------------------------------------------------------------------
+    if sort_by_time:
+        # Fraud block counter per account
+        working_df["fraud_block"] = (
+            working_df
+            .groupby(account_id_col)["frd_tag"]
+            .cumsum()
+        )
 
-    # --------------------------------------------------
-    # Fit timing
-    # --------------------------------------------------
-    t2 = time.perf_counter()
-    clf.fit(X, y)
-    torch.cuda.synchronize()
-    t3 = time.perf_counter()
-    print(f"⏱ fit() time (GPU): {t3 - t2:.3f}s")
+        # Row number inside each fraud block
+        working_df["row_in_block"] = (
+            working_df
+            .groupby([account_id_col, "fraud_block"])
+            .cumcount()
+        )
 
-    # --------------------------------------------------
-    # Predict timing
-    # --------------------------------------------------
-    t4 = time.perf_counter()
-    preds = clf.predict(X)
-    probs = clf.predict_proba(X)[:, 1]
-    torch.cuda.synchronize()
-    t5 = time.perf_counter()
-    print(f"⏱ predict() time (GPU): {t5 - t4:.3f}s")
+        # ------------------------------------------------------------------
+        # 5. Fraud rows + up to 4 prior rows
+        # ------------------------------------------------------------------
+        fraud_window_df = working_df[
+            (working_df["frd_tag"] == 1) |
+            (
+                (working_df["fraud_block"] > 0) &
+                (working_df["row_in_block"] <= 4)
+            )
+        ]
 
-    # --------------------------------------------------
-    # Evaluation
-    # --------------------------------------------------
-    from sklearn.metrics import roc_auc_score, average_precision_score
+        # ------------------------------------------------------------------
+        # 6. 1:N non-fraud sampling (based on fraud count per account)
+        # ------------------------------------------------------------------
+        fraud_counts = (
+            working_df
+            .groupby(account_id_col)["frd_tag"]
+            .sum()
+        )
 
-    auc = roc_auc_score(y, probs)
-    pr_auc = average_precision_score(y, probs)
+        eligible_nonfraud = working_df[
+            (working_df["frd_tag"] == 0) &
+            (working_df["fraud_block"] > 0)
+        ]
 
-    print(f"AUC: {auc:.4f}")
-    print(f"PR-AUC: {pr_auc:.4f}")
+        sampled_nonfraud = (
+            eligible_nonfraud
+            .groupby(account_id_col, group_keys=False)
+            .apply(
+                lambda x: x.sample(
+                    n=min(len(x), max(1, fraud_counts.loc[x.name] * N)),
+                    random_state=random_state
+                )
+            )
+        )
 
-    # --------------------------------------------------
-    # Cleanup
-    # --------------------------------------------------
-    del clf
-    torch.cuda.empty_cache()
-    os._exit(0)
+        # ------------------------------------------------------------------
+        # 7. Final result
+        # ------------------------------------------------------------------
+        final_df = (
+            pd.concat([fraud_window_df, sampled_nonfraud])
+            .drop_duplicates()
+            .sort_values([account_id_col, timestamp_col])
+            .reset_index(drop=True)
+        )
 
+    else:
+        # No ordering → no window logic possible
+        final_df = working_df.copy()
 
-if __name__ == "__main__":
-    main()
+    return final_df
