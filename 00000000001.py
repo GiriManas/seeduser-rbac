@@ -47,10 +47,12 @@ fraud_counts = (
 sampled_nonfraud = (
     eligible_nonfraud
     .groupby(account_id_col, group_keys=False)
-    .apply(lambda x: x.sample(
-        n=min(len(x), max(1, (x['frd_tag'] == 1).sum() * N)),
-        random_state=42
-    ))
+    .apply(
+        lambda x: x.sample(
+            n=min(len(x), max(1, fraud_counts.loc[x.name] * N)),
+            random_state=42
+        )
+    )
 )
 
 final_df = (
