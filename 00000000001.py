@@ -1,63 +1,47 @@
-import os
+selected_row_indices = set()
+
+group = group.reset_index()  # keep original index
+
+fraud_indices = group.index[group['frd_tag'] == 1].tolist()
+
+for idx in fraud_indices:
+    selected_row_indices.add(group.loc[idx, 'index'])  # fraud row
+
+    count = 0
+    j = idx - 1
+    while j >= 0 and count < 4:
+        if group.loc[j, 'frd_tag'] == 1:
+            break
+        selected_row_indices.add(group.loc[j, 'index'])
+        count += 1
+        j -= 1
+        
+        
 import numpy as np
-from tabpfn import TabPFNClassifier
 
+N = 100  # ratio
 
-def main():
-    # ------------------------------------------------------------------
-    # Environment setup (OpenShift + NAS)
-    # ------------------------------------------------------------------
-    os.environ["HF_HOME"] = "/mnt/nas1/giri/huggingface"
-    os.environ["TRANSFORMERS_OFFLINE"] = "1"
-    os.environ["TABPFN_OFFLINE"] = "1"   # extra safety
+nonfraud_idxs = group.index[group['frd_tag'] == 0].tolist()
 
-    # ------------------------------------------------------------------
-    # Explicit checkpoint file (IMPORTANT: file, not directory)
-    # ------------------------------------------------------------------
-    CKPT_PATH = (
-        "/mnt/nas1/giri/huggingface/tabpfn_2_5/"
-        "tabpfn-v2.5-classifier-v2.5_default.ckpt"
-    )
+sample_size = max(1, len(fraud_indices) * N)
+sample_size = min(sample_size, len(nonfraud_idxs))
 
-    print("HF_HOME:", os.environ["HF_HOME"])
-    print("Using checkpoint:", CKPT_PATH)
+sampled_nonfraud = np.random.choice(
+    nonfraud_idxs,
+    size=sample_size,
+    replace=False
+)
 
-    # ------------------------------------------------------------------
-    # Dummy tabular data
-    # ------------------------------------------------------------------
-    np.random.seed(42)
-    X = np.random.rand(50, 8)
-    y = np.random.randint(0, 2, 50)
+for idx in sampled_nonfraud:
+    selected_row_indices.add(group.loc[idx, 'index'])
 
-    print("X shape:", X.shape)
-    print("y shape:", y.shape)
-
-    # ------------------------------------------------------------------
-    # Initialize TabPFN
-    # ------------------------------------------------------------------
-    clf = TabPFNClassifier(
-        device="cpu",          # change to "cuda" only if GPU is enabled
-        model_path=CKPT_PATH   # 👈 MUST be a .ckpt file
-    )
-
-    print("TabPFNClassifier initialized")
-
-    # ------------------------------------------------------------------
-    # Fit (inference-style)
-    # ------------------------------------------------------------------
-    clf.fit(X, y)
-
-    # ------------------------------------------------------------------
-    # Predict
-    # ------------------------------------------------------------------
-    preds = clf.predict(X)
-    probs = clf.predict_proba(X)
-
-    print("Predictions (first 10):", preds[:10])
-    print("Probabilities (first 5):", probs[:5])
-
-    print("\n✅ TabPFN ran successfully using local NAS weights")
-
-
-if __name__ == "__main__":
-    main()
+    count = 0
+    j = idx - 1
+    while j >= 0 and count < 4:
+        if group.loc[j, 'frd_tag'] == 1:
+            break
+        selected_row_indices.add(group.loc[j, 'index'])
+        count += 1
+        j -= 1
+        
+return working_df.loc[sorted(selected_row_indices)].reset_index(drop=True)
