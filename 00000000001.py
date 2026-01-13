@@ -38,6 +38,12 @@ eligible_nonfraud = working_df[
     (working_df['fraud_block'] > 0)
 ]
 
+fraud_counts = (
+    working_df
+    .groupby(account_id_col)['frd_tag']
+    .sum()
+)
+
 sampled_nonfraud = (
     eligible_nonfraud
     .groupby(account_id_col, group_keys=False)
