@@ -1,3 +1,37 @@
+importance = xgb_model.get_score(importance_type="gain")
+
+importance_df = (
+    pd.DataFrame(importance.items(), columns=["feature", "gain"])
+    .sort_values("gain", ascending=False)
+)
+
+print(importance_df.head(20))
+
+
+from sklearn.inspection import permutation_importance
+import pandas as pd
+
+r = permutation_importance(
+    clf,
+    X_test,
+    y_test,
+    n_repeats=5,
+    random_state=42,
+    scoring="roc_auc"
+)
+
+importance_df = pd.DataFrame({
+    "feature": feature_names,
+    "importance": r.importances_mean
+}).sort_values("importance", ascending=False)
+
+print(importance_df.head(20))
+
+
+
+
+
+
 # Already created for TabPFN
 # X_train, X_test, y_train, y_test
 
