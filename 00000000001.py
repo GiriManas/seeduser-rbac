@@ -23,3 +23,20 @@ def prepare_xy(df, target_col="frd_tag"):
     print(f"Total rows: {X.shape[0]}")
 
     return X, y, X_df.columns.tolist()
+    
+
+
+from sklearn.model_selection import train_test_split
+
+X, y, feature_names = prepare_xy(df)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.30,
+    random_state=42,
+    stratify=y   # 🔥 critical for fraud
+)
+
+print("Train fraud rate:", y_train.mean())
+print("Test fraud rate :", y_test.mean())
