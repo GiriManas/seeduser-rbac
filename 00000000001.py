@@ -1,3 +1,39 @@
+# Already created for TabPFN
+# X_train, X_test, y_train, y_test
+
+import xgboost as xgb
+
+scale_pos_weight = (y_train == 0).sum() / (y_train == 1).sum()
+
+model = xgb.XGBClassifier(
+    n_estimators=500,
+    max_depth=8,
+    learning_rate=0.05,
+    subsample=0.8,
+    colsample_bytree=0.8,
+    objective="binary:logistic",
+    eval_metric="aucpr",
+    scale_pos_weight=scale_pos_weight,
+    tree_method="hist",
+    device="cuda",
+    random_state=42
+)
+
+model.fit(
+    X_train,
+    y_train,
+    eval_set=[(X_test, y_test)],
+    verbose=50
+)
+
+
+
+
+
+
+
+
+
 import numpy as np
 import pandas as pd
 
