@@ -40,3 +40,26 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 print("Train fraud rate:", y_train.mean())
 print("Test fraud rate :", y_test.mean())
+
+
+
+
+from sklearn.metrics import (
+    roc_auc_score,
+    average_precision_score,
+    classification_report
+)
+
+roc_auc = roc_auc_score(y_test, y_prob)
+pr_auc = average_precision_score(y_test, y_prob)
+
+print(f"ROC-AUC : {roc_auc:.4f}")
+print(f"PR-AUC  : {pr_auc:.4f}")
+
+print("\nClassification Report (0.5 threshold):")
+print(classification_report(y_test, y_pred, digits=4))
+
+del clf
+torch.cuda.empty_cache()
+os._exit(0)
+
