@@ -1,3 +1,18 @@
+df = df.sort_values(['account_number', 'transaction_dttm'])
+
+df['is_fraud_window'] = (
+    df
+    .groupby('account_number')['frd_tag']
+    .apply(lambda s: s.rolling(5, min_periods=1).max())
+    .reset_index(level=0, drop=True)
+)
+
+final_df = df[df['is_fraud_window'] == 1]
+
+
+
+
+
 importance = xgb_model.get_score(importance_type="gain")
 
 importance_df = (
