@@ -1,3 +1,38 @@
+import pandas as pd
+
+importance_gain = model.get_booster().get_score(importance_type="gain")
+importance_weight = model.get_booster().get_score(importance_type="weight")
+importance_cover  = model.get_booster().get_score(importance_type="cover")
+
+
+
+imp_gain_df = (
+    pd.DataFrame(
+        importance_gain.items(),
+        columns=["feature", "gain"]
+    )
+    .sort_values("gain", ascending=False)
+)
+
+imp_gain_df.head(20)
+
+
+feature_map = dict(
+    zip(
+        model.get_booster().feature_names,
+        X_train_xgb.columns
+    )
+)
+
+imp_gain_df["feature_name"] = imp_gain_df["feature"].map(feature_map)
+imp_gain_df = imp_gain_df.drop(columns=["feature"])
+
+imp_gain_df.head(20)
+
+
+
+
+
 cat_cols = X_train_xgb.select_dtypes(include="category").columns
 
 for c in cat_cols:
