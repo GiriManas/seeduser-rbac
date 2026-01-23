@@ -1,3 +1,11 @@
+cat_cols = X_train_xgb.select_dtypes(include="category").columns
+
+for c in cat_cols:
+    X_test_xgb[c] = X_test_xgb[c].cat.set_categories(
+        X_train_xgb[c].cat.categories
+    )
+
+
 
 # Fix object columns for XGBoost
 obj_cols = X_train_base.select_dtypes(include=["object"]).columns
