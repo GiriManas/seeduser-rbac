@@ -10,44 +10,55 @@ from tqdm import tqdm
 clf = joblib.load("model_tabpfn.joblib")
 
 # -----------------------------
+# SAMPLE ROWS (CRITICAL FOR SPEED)
+# -----------------------------
+N_SAMPLES = 20000   # 15k–30k is ideal
+RANDOM_STATE = 42
+
+X_sample = X_train_base.sample(
+    n=min(N_SAMPLES, len(X_train_base)),
+    random_state=RANDOM_STATE
+)
+y_sample = y_train_base.loc[X_sample.index]
+
+print(f"Using {len(X_sample)} rows for permutation importance")
+
+# -----------------------------
 # Base prediction (DO ONCE)
 # -----------------------------
 print("Running baseline prediction...")
-y_prob_base = clf.predict_proba(X_test_history)[:, 1]
-base_auc = roc_auc_score(y_test_history, y_prob_base)
+y_prob_base = clf.predict_proba(X_sample)[:, 1]
+base_auc = roc_auc_score(y_sample, y_prob_base)
 
 print(f"Baseline ROC-AUC: {base_auc:.6f}")
 
 # -----------------------------
-# Choose features to test
-# (IMPORTANT for speed)
+# Features to test
+# (you said ~90 columns — this is fine)
 # -----------------------------
-FEATURES_TO_TEST = X_test_history.columns.tolist()
-# or:
-# FEATURES_TO_TEST = top_features_from_xgb[:50]
+FEATURES_TO_TEST = X_sample.columns.tolist()
 
 # -----------------------------
 # Permutation Importance
 # -----------------------------
 results = []
 
-for col in tqdm(FEATURES_TO_TEST, desc="Permutation Importance"):
-    X_perm = X_test_history.copy()
+rng = np.random.default_rng(RANDOM_STATE)
 
-    # Shuffle only THIS column
-    X_perm[col] = np.random.permutation(X_perm[col].values)
+for col in tqdm(FEATURES_TO_TEST, desc="TabPFN Permutation Importance"):
+    X_perm = X_sample.copy()
+
+    # Shuffle ONLY this column
+    X_perm[col] = rng.permutation(X_perm[col].values)
 
     # Predict
     y_prob_perm = clf.predict_proba(X_perm)[:, 1]
-
-    perm_auc = roc_auc_score(y_test_history, y_prob_perm)
-
-    importance = base_auc - perm_auc
+    perm_auc = roc_auc_score(y_sample, y_prob_perm)
 
     results.append({
         "feature": col,
         "perm_auc": perm_auc,
-        "importance": importance
+        "importance": base_auc - perm_auc
     })
 
 # -----------------------------
