@@ -1,3 +1,22 @@
+import os
+
+# ---- MUST COME FIRST ----
+os.environ["HF_HOME"] = "/mnt/nas1/giri/huggingface"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["TABPFN_OFFLINE"] = "1"
+os.environ["POSTHOG_DISABLED"] = "1"
+os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
+
+# ---- THEN imports ----
+import numpy as np
+from tabpfn import TabPFNClassifier
+
+
+
+
+
+
+
 batch = 8192
 preds, probs = [], []
 
