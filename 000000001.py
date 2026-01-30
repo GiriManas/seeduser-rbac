@@ -1,3 +1,17 @@
+bad_cols = X_train_xgb_history_4.select_dtypes(include=["object"]).columns
+len(bad_cols), bad_cols[:10]
+
+
+for c in bad_cols:
+    X_train_xgb_history_4[c] = X_train_xgb_history_4[c].astype("category")
+    X_test_xgb_history_4[c]  = X_test_xgb_history_4[c].astype("category")
+
+
+
+
+
+
+
 import numpy as np
 import pandas as pd
 import joblib
