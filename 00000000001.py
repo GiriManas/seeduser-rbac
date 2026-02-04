@@ -1,96 +1,25 @@
-import pandas as pd
+def weighted_FPR_at_percentile(df, percentile, weight_column):
+    df = df.copy()
+    df = df.sort_values("prob", ascending=False)
 
-importance_gain = model.get_booster().get_score(importance_type="gain")
-importance_weight = model.get_booster().get_score(importance_type="weight")
-importance_cover  = model.get_booster().get_score(importance_type="cover")
+    target = df["target"].values        # 1 = bad, 0 = good
+    weight = df[weight_column].values
 
+    # Identify goods
+    is_good = (target == 0)
 
+    # Total weighted goods (denominator)
+    total_good_weight = np.sum(weight[is_good])
+    if total_good_weight == 0:
+        return np.nan
 
-imp_gain_df = (
-    pd.DataFrame(
-        importance_gain.items(),
-        columns=["feature", "gain"]
-    )
-    .sort_values("gain", ascending=False)
-)
+    # Cutoff by cumulative weight
+    cumsum_weight = np.cumsum(weight)
+    cutoff_weight = percentile * np.sum(weight)
+    cutoff_idx = np.searchsorted(cumsum_weight, cutoff_weight)
 
-imp_gain_df.head(20)
+    # False positives = goods selected in top bucket
+    false_positive_weight = np.sum(weight[:cutoff_idx][is_good[:cutoff_idx]])
 
-
-feature_map = dict(
-    zip(
-        model.get_booster().feature_names,
-        X_train_xgb.columns
-    )
-)
-
-imp_gain_df["feature_name"] = imp_gain_df["feature"].map(feature_map)
-imp_gain_df = imp_gain_df.drop(columns=["feature"])
-
-imp_gain_df.head(20)
-
-
-
-
-
-cat_cols = X_train_xgb.select_dtypes(include="category").columns
-
-for c in cat_cols:
-    X_test_xgb[c] = X_test_xgb[c].cat.set_categories(
-        X_train_xgb[c].cat.categories
-    )
-
-
-
-# Fix object columns for XGBoost
-obj_cols = X_train_base.select_dtypes(include=["object"]).columns
-
-for c in obj_cols:
-    X_train_base[c] = X_train_base[c].astype("category")
-    X_test_base[c]  = X_test_base[c].astype("category")
-
-xgb_model = XGBClassifier(
-    tree_method="hist",
-    enable_categorical=True,
-    eval_metric="auc"
-)
-
-xgb_model.fit(
-    X_train_base,
-    y_train_base,
-    eval_set=[(X_test_base, y_test_base)],
-    verbose=True
-)
-
-
-
-
-
-import os
-
-# ---- MUST COME FIRST ----
-os.environ["HF_HOME"] = "/mnt/nas1/giri/huggingface"
-os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["TABPFN_OFFLINE"] = "1"
-os.environ["POSTHOG_DISABLED"] = "1"
-os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
-
-# ---- THEN imports ----
-import numpy as np
-from tabpfn import TabPFNClassifier
-
-
-
-
-
-
-
-batch = 8192
-preds, probs = [], []
-
-for i in range(0, len(X_test_history), batch):
-    X_batch = X_test_history.iloc[i:i+batch]
-
-    proba = clf.predict_proba(X_batch)
-    probs.append(proba[:, 1])
-    preds.append((proba[:, 1] > 0.5).astype(int))
+    # FPR
+    return false_positive_weight / total_good_weight
