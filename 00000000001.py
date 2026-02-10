@@ -1,5 +1,18 @@
 import numpy as np
 
+embeddings = np.load(f"{base_path}/embeddings.npy")
+labels = np.load(f"{base_path}/labels.npy")
+
+print("Embeddings:", embeddings.shape)
+print("Labels:", labels.shape)
+
+
+
+
+
+
+import numpy as np
+
 np.random.seed(42)
 
 # Parameters
