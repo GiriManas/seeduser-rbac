@@ -1,25 +1,88 @@
-def weighted_FPR_at_percentile(df, percentile, weight_column):
-    df = df.copy()
-    df = df.sort_values("prob", ascending=False)
+import numpy as np
 
-    target = df["target"].values        # 1 = bad, 0 = good
-    weight = df[weight_column].values
+np.random.seed(42)
 
-    # Identify goods
-    is_good = (target == 0)
+# Parameters
+N_NON_FRAUD = 900
+N_FRAUD = 100
+D = 2048
 
-    # Total weighted goods (denominator)
-    total_good_weight = np.sum(weight[is_good])
-    if total_good_weight == 0:
-        return np.nan
+# Non-fraud: large diffuse cluster
+non_fraud_embeddings = np.random.normal(
+    loc=0.0,
+    scale=1.0,
+    size=(N_NON_FRAUD, D)
+)
 
-    # Cutoff by cumulative weight
-    cumsum_weight = np.cumsum(weight)
-    cutoff_weight = percentile * np.sum(weight)
-    cutoff_idx = np.searchsorted(cumsum_weight, cutoff_weight)
+# Fraud: tighter cluster, slightly shifted
+fraud_embeddings = np.random.normal(
+    loc=1.5,
+    scale=0.6,
+    size=(N_FRAUD, D)
+)
 
-    # False positives = goods selected in top bucket
-    false_positive_weight = np.sum(weight[:cutoff_idx][is_good[:cutoff_idx]])
+# Combine
+embeddings = np.vstack([non_fraud_embeddings, fraud_embeddings])
+labels = np.array([0] * N_NON_FRAUD + [1] * N_FRAUD)
 
-    # FPR
-    return false_positive_weight / total_good_weight
+print("Embeddings shape:", embeddings.shape)
+print("Labels shape:", labels.shape)
+
+
+
+
+from sklearn.manifold import TSNE
+
+tsne = TSNE(
+    n_components=2,
+    perplexity=30,
+    learning_rate=200,
+    random_state=42
+)
+
+embeddings_2d = tsne.fit_transform(embeddings)
+
+
+
+
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8, 6))
+
+plt.scatter(
+    embeddings_2d[labels == 0, 0],
+    embeddings_2d[labels == 0, 1],
+    alpha=0.3,
+    label="Non-Fraud"
+)
+
+plt.scatter(
+    embeddings_2d[labels == 1, 0],
+    embeddings_2d[labels == 1, 1],
+    alpha=0.8,
+    label="Fraud"
+)
+
+plt.legend()
+plt.title("t-SNE on Synthetic Embeddings")
+plt.xlabel("t-SNE dim 1")
+plt.ylabel("t-SNE dim 2")
+plt.show()
+
+
+
+from sklearn.cluster import KMeans
+
+kmeans = KMeans(n_clusters=2, random_state=42)
+cluster_ids = kmeans.fit_predict(embeddings)
+
+plt.figure(figsize=(8, 6))
+plt.scatter(
+    embeddings_2d[:, 0],
+    embeddings_2d[:, 1],
+    c=cluster_ids,
+    alpha=0.6
+)
+plt.title("K-Means clusters (synthetic data)")
+plt.show()
