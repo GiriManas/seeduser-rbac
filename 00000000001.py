@@ -2,6 +2,53 @@ import numpy as np
 
 np.random.seed(42)
 
+MAX_POINTS = 20000
+
+fraud_idx = np.where(labels == 1)[0]
+nonfraud_idx = np.where(labels == 0)[0]
+
+# Decide how many fraud to keep (cap at MAX_POINTS // 2)
+max_fraud = MAX_POINTS // 2
+n_fraud = min(len(fraud_idx), max_fraud)
+n_nonfraud = MAX_POINTS - n_fraud
+
+fraud_keep = np.random.choice(
+    fraud_idx,
+    size=n_fraud,
+    replace=False
+)
+
+nonfraud_keep = np.random.choice(
+    nonfraud_idx,
+    size=n_nonfraud,
+    replace=False
+)
+
+selected_idx = np.concatenate([fraud_keep, nonfraud_keep])
+np.random.shuffle(selected_idx)
+
+embeddings_sub = embeddings[selected_idx]
+labels_sub = labels[selected_idx]
+
+print("Subsampled embeddings:", embeddings_sub.shape)
+print("Fraud count:", labels_sub.sum())
+print("Fraud ratio:", labels_sub.mean())
+
+
+
+
+
+
+
+
+
+
+
+
+import numpy as np
+
+np.random.seed(42)
+
 MAX_POINTS = 20000  # safe size for t-SNE
 
 fraud_idx = np.where(labels == 1)[0]
