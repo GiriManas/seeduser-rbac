@@ -1,3 +1,25 @@
+import pandas as pd
+
+df = pd.DataFrame({
+    "cluster": cluster_ids,
+    "label": labels_sub
+})
+
+cluster_stats = df.groupby("cluster").agg(
+    count=("label", "count"),
+    fraud_rate=("label", "mean")
+).sort_values("fraud_rate", ascending=False)
+
+cluster_stats
+
+
+
+
+
+
+
+
+
 import matplotlib.pyplot as plt
 
 plt.figure(figsize=(8, 6))
