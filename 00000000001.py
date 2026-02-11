@@ -1,3 +1,31 @@
+cluster_fraud_rate = df.groupby("Cluster")["label"].mean()
+
+
+fraud_rate_per_point = [cluster_fraud_rate[c] for c in cluster_ids]
+
+
+plt.figure(figsize=(8,6))
+
+plt.scatter(
+    embeddings_2d[:, 0],
+    embeddings_2d[:, 1],
+    c=fraud_rate_per_point,
+    cmap="Reds",
+    s=5,
+    alpha=0.7
+)
+
+plt.colorbar(label="Cluster Fraud Rate")
+plt.title("Clusters Colored by Fraud Density")
+plt.show()
+
+
+
+
+
+
+
+
 import matplotlib.pyplot as plt
 
 # Create masks
