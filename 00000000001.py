@@ -1,3 +1,30 @@
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8, 6))
+
+plt.scatter(
+    embeddings_2d[labels_sub == 0, 0],
+    embeddings_2d[labels_sub == 0, 1],
+    alpha=0.2,
+    label="Non-Fraud"
+)
+
+plt.scatter(
+    embeddings_2d[labels_sub == 1, 0],
+    embeddings_2d[labels_sub == 1, 1],
+    alpha=0.8,
+    label="Fraud"
+)
+
+plt.legend()
+plt.title("Fraud vs Non-Fraud on t-SNE Space")
+plt.show()
+
+
+
+
+
+
 import numpy as np
 
 np.random.seed(42)
