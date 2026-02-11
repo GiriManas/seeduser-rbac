@@ -1,0 +1,4 @@
+	1.	We generated last-token embeddings (2048-d) for ~650k transactions.
+	2.	Due to computational constraints of t-SNE, we created a stratified subsample of 20k transactions.
+	3.	The sample was balanced (50% fraud, 50% non-fraud) to preserve fraud structure in visualization.
+	4.	t-SNE was applied for dimensionality reduction, followed by K-Means clustering to analyze behavioral regions in embedding space.
