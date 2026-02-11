@@ -1,3 +1,33 @@
+x_min, x_max = embeddings_2d[:,0].min(), embeddings_2d[:,0].max()
+y_min, y_max = embeddings_2d[:,1].min(), embeddings_2d[:,1].max()
+
+plt.figure(figsize=(14,6))
+
+plt.subplot(1, 2, 1)
+plt.scatter(embeddings_2d[nonfraud_mask, 0],
+            embeddings_2d[nonfraud_mask, 1],
+            s=5, alpha=0.6)
+plt.xlim(x_min, x_max)
+plt.ylim(y_min, y_max)
+plt.title("Non-Fraud")
+
+plt.subplot(1, 2, 2)
+plt.scatter(embeddings_2d[fraud_mask, 0],
+            embeddings_2d[fraud_mask, 1],
+            s=5, alpha=0.6)
+plt.xlim(x_min, x_max)
+plt.ylim(y_min, y_max)
+plt.title("Fraud")
+
+plt.tight_layout()
+plt.show()
+
+
+
+
+
+
+
 import pandas as pd
 
 df = pd.DataFrame({
