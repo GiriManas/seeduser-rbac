@@ -1,3 +1,15 @@
+base_path = "/nas/pyfrm_dev_3/mrm/pfm/debit/trans_0624_1024_byacct/"
+
+files = [f"{base_path}part_{i}" for i in range(1, 6)]
+
+df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+
+
+
+
+
+
+
 cluster_fraud_rate = df.groupby("Cluster")["label"].mean()
 
 
