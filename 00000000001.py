@@ -1,3 +1,30 @@
+def model_forward_with_logits(batch):
+
+    input_ids = batch['input_ids'].to(device)
+
+    with torch.no_grad():
+        with torch.cuda.amp.autocast(enabled=torch.cuda.is_available()):
+
+            model = clf_model.model
+
+            x = model.token_embedding(input_ids)
+            x = model.pos_embedding(x)
+
+            for layer in model.layers:
+                x = layer(x)
+
+            hidden_states = model.norm(x)
+            logits = model.lm_head(hidden_states)
+
+    return hidden_states, logits
+
+
+
+
+
+
+
+
 # Concatenate everything
 embeddings = np.vstack(all_embs)          # [N, D]
 labels = np.concatenate(all_labels)       # [N]
