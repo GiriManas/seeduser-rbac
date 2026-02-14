@@ -1,3 +1,32 @@
+def model_forward_with_logits(batch):
+
+    input_ids = batch['input_ids'].to(device)
+
+    with torch.no_grad():
+        with torch.cuda.amp.autocast(enabled=torch.cuda.is_available()):
+            outputs = clf_model.model(input_ids=input_ids)
+
+    return outputs["hidden_states"], outputs["logits"]
+
+
+
+
+
+
+def model_forward(batch):
+
+    input_ids = batch["input_ids"].to(device)
+
+    with torch.no_grad():
+        with torch.cuda.amp.autocast(enabled=torch.cuda.is_available()):
+            outputs = clf_model.model(input_ids=input_ids)
+
+    return outputs
+
+
+
+
+
 all_embs = []
 all_labels = []
 all_probs = []
