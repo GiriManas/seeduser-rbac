@@ -1,3 +1,55 @@
+all_embs = []
+all_labels = []
+all_probs = []
+
+clf_model.model.eval()
+
+for batch in tqdm(eval_dataloader, desc="Processing Validation Data"):
+
+    batch = {k: v.to(device) if isinstance(v, torch.Tensor) else v
+             for k, v in batch.items()}
+
+    outputs = model_forward(batch)
+
+    hidden_states = outputs.hidden_states[-1]   # last transformer layer
+    logits = outputs.logits                     # classifier logits
+
+    lens = batch["lens"]
+    labels = batch["frd_labels"]
+
+    # -------- Last token pooling --------
+    idx = (lens - 1).clamp_min(0)
+    pooled = hidden_states[torch.arange(hidden_states.size(0)), idx]
+
+    # -------- Convert logits → probability --------
+    if logits.shape[-1] == 2:
+        probs = torch.softmax(logits, dim=1)[:, 1]  # probability of fraud
+    else:
+        probs = torch.sigmoid(logits).squeeze()
+
+    all_embs.append(pooled.detach().cpu().numpy())
+    all_labels.append(labels.detach().cpu().numpy())
+    all_probs.append(probs.detach().cpu().numpy())
+    
+    
+    
+    
+embeddings = np.vstack(all_embs)
+labels = np.concatenate(all_labels)
+probs = np.concatenate(all_probs)
+
+print("Embeddings shape:", embeddings.shape)
+print("Labels shape:", labels.shape)
+print("Probs shape:", probs.shape)
+
+
+
+
+
+
+
+
+
 base_path = "/nas/pyfrm_dev_3/mrm/pfm/debit/trans_0624_1024_byacct/"
 
 files = [f"{base_path}part_{i}" for i in range(1, 6)]
