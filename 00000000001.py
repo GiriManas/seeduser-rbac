@@ -1,3 +1,8 @@
+
+hidden, logits = model_forward_with_logits(batch)
+
+
+
 def model_forward_with_logits(batch):
 
     input_ids = batch['input_ids'].to(device)
