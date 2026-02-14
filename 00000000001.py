@@ -1,4 +1,20 @@
 
+if logits.shape[-1] == 2:
+    probs = torch.softmax(logits, dim=1)[:, 1]
+else:
+    probs = torch.sigmoid(logits).squeeze(-1)
+
+all_probs.append(probs.detach().cpu().numpy())
+
+
+
+
+
+
+
+
+
+
 def model_forward_with_logits(batch):
 
     input_ids = batch["input_ids"].to(device)
