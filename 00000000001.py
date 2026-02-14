@@ -1,3 +1,24 @@
+pooled = hidden[
+    torch.arange(hidden.size(0), device=hidden.device),
+    idx
+]
+
+
+if logits.shape[-1] == 2:
+    probs = torch.softmax(logits, dim=1)[:, 1]
+else:
+    probs = torch.sigmoid(logits).squeeze(-1)
+    
+    
+    
+    all_probs.append(probs.detach().cpu().numpy())
+
+
+print(hidden.shape)   # should be [256, T, 2048]
+print(logits.shape)   # should be [256, 1] or [256, 2]
+print(lens.shape)     # should be [256]
+break
+
 
 hidden, logits = model_forward_with_logits(batch)
 
