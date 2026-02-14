@@ -1,4 +1,34 @@
 
+def model_forward_with_logits(batch):
+
+    input_ids = batch["input_ids"].to(device)
+    lens = batch["lens"].to(device)
+
+    with torch.no_grad():
+        with torch.cuda.amp.autocast(enabled=torch.cuda.is_available()):
+
+            # Backbone
+            outputs = clf_model.model(input_ids=input_ids)
+            hidden_states = outputs["hidden_states"]   # 👈 IMPORTANT
+
+            # Last valid token pooling
+            idx = (lens - 1).clamp_min(0)
+            pooled = hidden_states[
+                torch.arange(hidden_states.size(0), device=hidden_states.device),
+                idx
+            ]
+
+            # Fraud head
+            pooled = clf_model.dropout(pooled)
+            logits = clf_model.score(pooled)
+
+    return hidden_states, logits
+
+
+
+
+
+
 
 def model_forward_with_logits(batch):
 
