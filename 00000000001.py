@@ -1,3 +1,30 @@
+# Concatenate everything
+embeddings = np.vstack(all_embs)          # [N, D]
+labels = np.concatenate(all_labels)       # [N]
+probs = np.concatenate(all_probs)         # [N]
+
+print("Embeddings:", embeddings.shape)
+print("Labels:", labels.shape)
+print("Probs:", probs.shape)
+
+# Save
+np.save("/mnt/common/.../embeddings.npy", embeddings.astype(np.float32))
+np.save("/mnt/common/.../labels.npy", labels.astype(np.int8))
+np.save("/mnt/common/.../probs.npy", probs.astype(np.float32))
+
+print("Saved successfully")
+
+
+
+
+
+
+
+
+
+
+
+
 pooled = hidden[
     torch.arange(hidden.size(0), device=hidden.device),
     idx
