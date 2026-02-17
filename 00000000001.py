@@ -1,3 +1,18 @@
+plt.scatter(df_c4[df_c4.label==1]['emb_2d_x'],
+            df_c4[df_c4.label==1]['emb_2d_y'], alpha=0.3)
+
+plt.scatter(df_c4[df_c4.label==0]['emb_2d_x'],
+            df_c4[df_c4.label==0]['emb_2d_y'], alpha=0.3)
+
+plt.legend(['Fraud','Non-Fraud'])
+plt.show()
+
+
+
+
+
+
+
 
 if logits.shape[-1] == 2:
     probs = torch.softmax(logits, dim=1)[:, 1]
