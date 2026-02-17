@@ -1,3 +1,52 @@
+import numpy as np
+
+mask_c4 = (cluster_ids == 4)
+
+emb_c4 = embeddings_sub[mask_c4]
+labels_c4 = labels_sub[mask_c4]
+
+print(emb_c4.shape)
+print(labels_c4.shape)
+
+
+
+from sklearn.cluster import KMeans
+
+kmeans_c4 = KMeans(n_clusters=3, random_state=42)
+subcluster_ids = kmeans_c4.fit_predict(emb_c4)
+
+
+
+
+import pandas as pd
+
+df_c4_new = pd.DataFrame({
+    "subcluster": subcluster_ids,
+    "label": labels_c4
+})
+
+df_c4_new.groupby("subcluster")["label"].agg(
+    count="count",
+    fraud_rate="mean"
+).sort_values("fraud_rate", ascending=False)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 plt.scatter(df_c4[df_c4.label==1]['emb_2d_x'],
             df_c4[df_c4.label==1]['emb_2d_y'], alpha=0.3)
 
