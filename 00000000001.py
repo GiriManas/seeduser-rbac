@@ -1,5 +1,25 @@
 from sklearn.manifold import TSNE
 
+tsne = TSNE(
+    n_components=2,
+    random_state=42,
+    perplexity=30,
+    n_iter=1000
+)
+
+embeddings_2d = tsne.fit_transform(embeddings_sub)
+
+
+
+
+
+
+
+
+
+
+from sklearn.manifold import TSNE
+
 tsne = TSNE(n_components=2, random_state=42, perplexity=30)
 emb_c4_2d = tsne.fit_transform(emb_c4)
 
