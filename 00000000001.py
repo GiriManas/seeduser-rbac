@@ -1,3 +1,17 @@
+from sklearn.manifold import TSNE
+
+tsne = TSNE(n_components=2, random_state=42, perplexity=30)
+emb_c4_2d = tsne.fit_transform(emb_c4)
+
+
+
+
+
+
+
+
+
+
 import numpy as np
 
 mask_c4 = (cluster_ids == 4)
