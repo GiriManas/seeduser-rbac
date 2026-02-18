@@ -1,3 +1,29 @@
+
+#Step 1 — Filter Non-Frauds in Cluster 4
+
+df_c4_nfraud = df_c4[df_c4['label'] == 0]
+
+#Step 2 — Rank by Suspiciousness
+
+We define suspicious non-frauds as:
+	1.	High model probability (probs)
+	2.	Close to fraud-dense region in embedding space
+	3.	High-risk feature values (amount, length, etc.)
+    
+df_suspicious = df_c4_nfraud.sort_values('probs', ascending=False)
+df_suspicious.head(20)
+
+These are non-frauds with highest fraud probability inside a fraud-heavy cluster.
+
+
+
+
+
+
+
+
+
+
 from sklearn.manifold import TSNE
 
 tsne = TSNE(
