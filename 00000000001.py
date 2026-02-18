@@ -1,3 +1,19 @@
+fraud_75 = np.percentile(fraud_distances, 75)
+
+inside_fraud_core = (
+    df_c4_centroid_suspicious['distance_to_fraud_center'] <= fraud_75
+).sum()
+
+print("Non-fraud inside fraud 75% radius:", inside_fraud_core)
+print("Percentage:", inside_fraud_core / len(df_c4_centroid_suspicious))
+
+
+
+
+
+
+
+
 fraud_distances = np.linalg.norm(
     fraud_embeddings - fraud_centroid, axis=1
 )
