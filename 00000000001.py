@@ -1,3 +1,18 @@
+fraud_distances = np.linalg.norm(
+    fraud_embeddings - fraud_centroid, axis=1
+)
+
+print("Fraud distance describe:")
+print(pd.Series(fraud_distances).describe())
+
+print("\nSuspicious non-fraud distance describe:")
+print(df_c4_centroid_suspicious['distance_to_fraud_center'].describe())
+
+
+
+
+
+
 print("Fraud avg distance to centroid:",
       np.mean(np.linalg.norm(fraud_embeddings - fraud_centroid, axis=1)))
 
