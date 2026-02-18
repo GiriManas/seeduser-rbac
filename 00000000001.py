@@ -1,3 +1,14 @@
+print("Fraud avg distance to centroid:",
+      np.mean(np.linalg.norm(fraud_embeddings - fraud_centroid, axis=1)))
+
+print("Non-fraud avg distance:",
+      df_c4_centroid_suspicious['distance_to_fraud_center'].mean())
+
+
+
+
+
+
 # Get indices from dataframe
 fraud_idx = dfw_tSNE[
     (dfw_tSNE['cluster'] == 4) & 
