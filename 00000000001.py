@@ -1,3 +1,63 @@
+# Get indices from dataframe
+fraud_idx = dfw_tSNE[
+    (dfw_tSNE['cluster'] == 4) & 
+    (dfw_tSNE['label'] == 1)
+].index
+
+nonfraud_idx = dfw_tSNE[
+    (dfw_tSNE['cluster'] == 4) & 
+    (dfw_tSNE['label'] == 0)
+].index
+
+
+
+
+fraud_embeddings = embeddings_raw[fraud_idx]
+nonfraud_embeddings = embeddings_raw[nonfraud_idx]
+
+
+
+fraud_centroid = fraud_embeddings.mean(axis=0)
+
+
+
+import numpy as np
+
+distances = np.linalg.norm(
+    nonfraud_embeddings - fraud_centroid,
+    axis=1
+)
+
+
+
+df_c4_nfraud = dfw_c4[dfw_c4['label'] == 0].copy()
+
+df_c4_nfraud['distance_to_fraud_center'] = distances
+
+
+df_suspicious = df_c4_nfraud.sort_values(
+    ['distance_to_fraud_center', 'probs'],
+    ascending=[True, False]
+)
+
+df_suspicious.head(20)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import numpy as np
 
 # Fraud embeddings in cluster 4
