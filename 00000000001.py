@@ -1,3 +1,35 @@
+import numpy as np
+
+# Fraud embeddings in cluster 4
+fraud_mask = (df_c4['label'] == 1)
+fraud_embeddings = embeddings_sub[(cluster_ids == 4) & (labels_sub == 1)]
+
+fraud_centroid = fraud_embeddings.mean(axis=0)
+
+# Non-fraud embeddings
+nonfraud_embeddings = embeddings_sub[(cluster_ids == 4) & (labels_sub == 0)]
+
+distances = np.linalg.norm(nonfraud_embeddings - fraud_centroid, axis=1)
+
+df_c4_nfraud['distance_to_fraud_center'] = distances
+
+df_suspicious = df_c4_nfraud.sort_values(
+    ['distance_to_fraud_center', 'probs'],
+    ascending=[True, False]
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #Step 1 — Filter Non-Frauds in Cluster 4
 
@@ -14,6 +46,34 @@ df_suspicious = df_c4_nfraud.sort_values('probs', ascending=False)
 df_suspicious.head(20)
 
 These are non-frauds with highest fraud probability inside a fraud-heavy cluster.
+
+
+Step A
+Cluster-Based Prior Adjustment
+
+Since fraud rate in cluster 4 = 0.74
+
+Create a behavioral fraud score:
+
+
+cluster_fraud_rate = 0.74
+
+df_c4_nfraud['adjusted_score'] = (
+    0.5 * df_c4_nfraud['probs'] +
+    0.5 * cluster_fraud_rate
+)
+
+df_suspicious = df_c4_nfraud.sort_values('adjusted_score', ascending=False)
+
+This says:
+	•	Model thinks ~0.41
+	•	Cluster says ~0.74
+	•	Combined score is higher
+
+Now rank by adjusted_score.
+
+
+
 
 
 
