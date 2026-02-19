@@ -1,3 +1,61 @@
+#=====MIN DISTANCE TO ANY FRAUD======
+
+
+import numpy as np
+
+# Select cluster
+cluster_id = 4
+
+dfw_c4 = dfw_tSNE[dfw_tSNE['cluster'] == cluster_id]
+
+fraud_idx = dfw_tSNE[
+    (dfw_tSNE['cluster'] == cluster_id) &
+    (dfw_tSNE['label'] == 1)
+].index
+
+nonfraud_idx = dfw_tSNE[
+    (dfw_tSNE['cluster'] == cluster_id) &
+    (dfw_tSNE['label'] == 0)
+].index
+
+
+
+fraud_embeddings = embeddings_raw[fraud_idx]
+nonfraud_embeddings = embeddings_raw[nonfraud_idx]
+
+# Compute pairwise distances (NonFraud x Fraud)
+# shape will be (num_nonfraud, num_fraud)
+
+dist_matrix = np.linalg.norm(
+    nonfraud_embeddings[:, None, :] - fraud_embeddings[None, :, :],
+    axis=2
+)
+
+# For each non-fraud, get minimum distance to any fraud
+min_distances = dist_matrix.min(axis=1)
+
+
+df_c4_nfraud = dfw_c4[dfw_c4['label'] == 0].copy()
+
+df_c4_nfraud['min_distance_to_any_fraud'] = min_distances
+
+
+df_c4_min_suspicious = df_c4_nfraud.sort_values(
+    ['min_distance_to_any_fraud', 'probs'],
+    ascending=[True, False]
+)
+
+df_c4_min_suspicious.head(20)
+
+
+
+#=====MIN DISTANCE TO ANY FRAUD======
+
+
+
+
+
+
 fraud_75 = np.percentile(fraud_distances, 75)
 
 inside_fraud_core = (
