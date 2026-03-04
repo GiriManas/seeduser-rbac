@@ -1,3 +1,84 @@
+import pyautogui
+import mss
+from PIL import Image
+import torch
+from transformers import AutoProcessor, AutoModelForVision2Seq
+
+model_path = "/commons/copra_share/VIPER_NLP/hf_model_hub/qwen2_vl_7b-instruct"
+
+processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
+
+model = AutoModelForVision2Seq.from_pretrained(
+    model_path,
+    torch_dtype=torch.float16,
+    device_map="auto",
+    trust_remote_code=True
+)
+
+def capture_screen():
+    with mss.mss() as sct:
+        monitor = sct.monitors[1]
+        screenshot = sct.grab(monitor)
+
+        img = Image.frombytes("RGB", screenshot.size, screenshot.rgb)
+        img.save("screen.png")
+        return img
+
+
+def ask_model(image):
+
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "image"},
+                {"type": "text", "text": """
+Look at this computer screenshot.
+
+Identify a button that can be clicked and return coordinates.
+
+Respond in JSON:
+{ "action": "CLICK", "x": ?, "y": ? }
+"""}
+            ]
+        }
+    ]
+
+    text = processor.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True
+    )
+
+    inputs = processor(
+        text=[text],
+        images=[image],
+        padding=True,
+        return_tensors="pt"
+    ).to("cuda")
+
+    output = model.generate(**inputs, max_new_tokens=200)
+
+    return processor.decode(output[0], skip_special_tokens=True)
+
+
+while True:
+
+    img = capture_screen()
+
+    response = ask_model(img)
+
+    print(response)
+
+    break
+
+
+
+
+
+
+###################
+
 from transformers import AutoProcessor, AutoModelForVision2Seq
 from PIL import Image
 import torch
