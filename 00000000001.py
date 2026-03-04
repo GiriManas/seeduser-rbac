@@ -1,4 +1,49 @@
+from transformers import AutoProcessor, AutoModelForVision2Seq
+from PIL import Image
+import torch
 
+model_path = "/commons/copra_share/VIPER_NLP/hf_model_hub/qwen2_vl_7b-instruct"
+
+processor = AutoProcessor.from_pretrained(
+    model_path,
+    trust_remote_code=True
+)
+
+model = AutoModelForVision2Seq.from_pretrained(
+    model_path,
+    torch_dtype=torch.float16,
+    device_map="auto",
+    trust_remote_code=True
+)
+
+image = Image.open("/commons/users/k104630/test-image/test-image.png")
+
+messages = [
+    {
+        "role": "user",
+        "content": [
+            {"type": "image"},
+            {"type": "text", "text": "Describe this image"}
+        ]
+    }
+]
+
+text = processor.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True
+)
+
+inputs = processor(
+    text=[text],
+    images=[image],
+    padding=True,
+    return_tensors="pt"
+).to("cuda")
+
+output = model.generate(**inputs, max_new_tokens=100)
+
+print(processor.decode(output[0], skip_special_tokens=True))
 
 
 
@@ -11,6 +56,7 @@ model_path = "/commons/copra_share/VIPER_NLP/hf_model_hub/qwen2_vl_7b-instruct"
 
 processor = AutoProcessor.from_pretrained(
     model_path,
+    use_fast=True,
     trust_remote_code=True
 )
 
