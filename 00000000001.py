@@ -6,6 +6,7 @@ model_path = "/commons/copra_share/VIPER_NLP/hf_model_hub/qwen2_vl_7b-instruct"
 
 processor = AutoProcessor.from_pretrained(
     model_path,
+    use_fast=True,
     trust_remote_code=True
 )
 
