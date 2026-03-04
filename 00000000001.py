@@ -1,3 +1,51 @@
+
+
+
+
+
+from transformers import AutoProcessor, AutoModelForVision2Seq
+from PIL import Image
+import torch
+
+model_path = "/commons/copra_share/VIPER_NLP/hf_model_hub/qwen2_vl_7b-instruct"
+
+processor = AutoProcessor.from_pretrained(
+    model_path,
+    trust_remote_code=True
+)
+
+model = AutoModelForVision2Seq.from_pretrained(
+    model_path,
+    torch_dtype=torch.float16,
+    device_map="auto",
+    trust_remote_code=True
+)
+
+# example image path
+image = Image.open("/apps/dli_test/test.png")
+
+inputs = processor(
+    images=image,
+    text="Describe this image",
+    return_tensors="pt"
+).to("cuda")
+
+output = model.generate(**inputs, max_new_tokens=100)
+
+print(processor.decode(output[0], skip_special_tokens=True))
+
+
+
+
+
+
+
+
+
+
+
+
+
 #=====MIN DISTANCE TO ANY FRAUD======
 
 
