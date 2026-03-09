@@ -1,3 +1,27 @@
+import pandas as pd
+import os
+
+files = [os.path.join(TRAIN_PATH, f) for f in os.listdir(TRAIN_PATH)]
+
+raw_train_df = pd.DataFrame()
+
+for f in files:
+    df = pd.read_parquet(f)
+    df_sample = df.sample(frac=0.1, random_state=42)
+    raw_train_df = pd.concat([raw_train_df, df_sample], ignore_index=True)
+
+print(raw_train_df.shape)
+
+
+
+
+
+
+
+
+
+
+
 
 X_train_base = train_base.drop(columns=[target_col])
 y_train_base = train_base[target_col]
