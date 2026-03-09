@@ -1,3 +1,41 @@
+import xgboost as xgb
+import joblib
+
+final_model = xgb.XGBClassifier(
+    objective="binary:logistic",
+    eval_metric="auc",
+
+    subsample=1.0,
+    scale_pos_weight=7.475275434670339,
+    reg_lambda=5,
+    reg_alpha=10,
+    n_estimators=360,
+    min_child_weight=3,
+    max_depth=7,
+    learning_rate=0.02,
+    colsample_bytree=1
+)
+
+final_model.fit(X_train_base, y_train_base)
+
+
+joblib.dump(
+    final_model,
+    "/nas/pyfrm_dev_3/k104630/model_run_data/6-months-data/model_xgb_run/base_line_model_6_months_train.joblib"
+)
+
+
+model = joblib.load("base_line_model_6_months_train.joblib")
+
+proba = model.predict_proba(X_test)[:,1]
+
+pred = model.predict(X_test)
+
+
+
+
+
+
 
 import os
 import re
