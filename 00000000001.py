@@ -24,7 +24,8 @@ raw_train_df = pd.concat(sampled_dfs, ignore_index=True)
 
 print(raw_train_df.shape)
 
-
+print(raw_train_df[target_col].value_counts())
+print(raw_train_df[target_col].value_counts(normalize=True))
 
 
 
