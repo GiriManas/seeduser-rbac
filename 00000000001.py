@@ -12,7 +12,7 @@ for c in obj_cols:
 
 print(X_train_base.select_dtypes(include=['object']).columns)
 
-
+print(X_train_base.select_dtypes(include=['category']).shape)
 
 
 
