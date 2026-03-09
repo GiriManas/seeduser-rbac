@@ -1,3 +1,19 @@
+obj_cols = X_train_base.select_dtypes(include=["object"]).columns
+
+for c in obj_cols:
+    X_train_base[c] = X_train_base[c].astype("category")
+
+
+
+
+
+
+
+
+
+
+
+
 import pyautogui
 import mss
 from PIL import Image
