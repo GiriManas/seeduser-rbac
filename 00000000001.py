@@ -1,14 +1,13 @@
+
+X_train_base = train_base.drop(columns=[target_col])
+y_train_base = train_base[target_col]
+
 obj_cols = X_train_base.select_dtypes(include=["object"]).columns
+
+X_train_base[obj_cols] = X_train_base[obj_cols].fillna("missing")
 
 for c in obj_cols:
     X_train_base[c] = X_train_base[c].astype("category")
-
-train_base[c] = train_base[c].astype("category")
-train_base[c] = train_base[c].astype("category")
-
-print(X_train_base.dtypes.value_counts())
-
-
 
 
 
