@@ -1,3 +1,133 @@
+
+
+
+
+
+import optuna
+import xgboost as xgb
+import joblib
+
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
+
+
+# -------------------------------
+# Train / Validation Split
+# -------------------------------
+
+X_tr, X_val, y_tr, y_val = train_test_split(
+    X_train_base,
+    y_train_base,
+    test_size=0.2,
+    stratify=y_train_base,
+    random_state=42
+)
+
+
+# -------------------------------
+# Optuna Objective
+# -------------------------------
+
+def objective(trial):
+
+    params = {
+
+        "objective": "binary:logistic",
+        "eval_metric": "auc",
+
+        "tree_method": "hist",
+        "enable_categorical": True,
+
+        "max_depth": trial.suggest_int("max_depth", 4, 10),
+
+        "learning_rate": trial.suggest_float("learning_rate", 0.005, 0.05, log=True),
+
+        "n_estimators": trial.suggest_int("n_estimators", 300, 1200),
+
+        "min_child_weight": trial.suggest_int("min_child_weight", 1, 10),
+
+        "subsample": trial.suggest_float("subsample", 0.7, 1.0),
+
+        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.6, 1.0),
+
+        "reg_alpha": trial.suggest_float("reg_alpha", 1e-3, 10, log=True),
+
+        "reg_lambda": trial.suggest_float("reg_lambda", 1e-3, 10, log=True),
+
+        "scale_pos_weight": trial.suggest_float("scale_pos_weight", 5, 150),
+
+        "n_jobs": -1
+    }
+
+    model = xgb.XGBClassifier(**params)
+
+    model.fit(
+        X_tr,
+        y_tr,
+        eval_set=[(X_val, y_val)],
+        early_stopping_rounds=50,
+        verbose=False
+    )
+
+    preds = model.predict_proba(X_val)[:,1]
+
+    auc = roc_auc_score(y_val, preds)
+
+    return auc
+
+
+# -------------------------------
+# Run Optimization
+# -------------------------------
+
+study = optuna.create_study(direction="maximize")
+
+study.optimize(objective, n_trials=50)
+
+
+print("Best AUC:", study.best_value)
+
+print("Best Params:", study.best_params)
+
+
+# -------------------------------
+# Train Final Model
+# -------------------------------
+
+best_params = study.best_params
+
+final_model = xgb.XGBClassifier(
+    objective="binary:logistic",
+    eval_metric="auc",
+    tree_method="hist",
+    enable_categorical=True,
+    **best_params
+)
+
+final_model.fit(X_train_base, y_train_base)
+
+
+# -------------------------------
+# Save Model
+# -------------------------------
+
+model_path = "/nas/pyfrm_dev_3/k104630/model_run_data/6-months-data/model_xgb_run/xgb_optuna_model.joblib"
+
+joblib.dump(final_model, model_path)
+
+print("Model saved to:", model_path)
+
+
+
+
+
+
+
+
+
+
+
+
 eval_df = pd.DataFrame({
     "y_true": y_test_base,
     "score": y_prob
