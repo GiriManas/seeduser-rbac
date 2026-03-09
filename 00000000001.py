@@ -1,6 +1,35 @@
 import pandas as pd
 import os
 
+files = [
+    os.path.join(TRAIN_PATH, f)
+    for f in os.listdir(TRAIN_PATH)
+    if f.endswith(".parquet")
+]
+
+sampled_dfs = []
+
+for f in files:
+    df = pd.read_parquet(f)
+    df_sample = df.sample(frac=0.1, random_state=42)
+    sampled_dfs.append(df_sample)
+
+raw_train_df = pd.concat(sampled_dfs, ignore_index=True)
+
+print(raw_train_df.shape)
+
+
+
+
+
+
+
+
+
+
+import pandas as pd
+import os
+
 files = [os.path.join(TRAIN_PATH, f) for f in os.listdir(TRAIN_PATH)]
 
 raw_train_df = pd.DataFrame()
