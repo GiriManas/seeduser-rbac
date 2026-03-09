@@ -1,3 +1,23 @@
+eval_df = pd.DataFrame({
+    "y_true": y_test_base,
+    "score": y_prob
+})
+
+eval_df = eval_df.sort_values("score", ascending=False)
+
+total_fraud = eval_df["y_true"].sum()
+
+for pct in [0.01, 0.03, 0.05]:
+    
+    top_k = int(len(eval_df) * pct)
+    
+    captured = eval_df.head(top_k)["y_true"].sum()
+    
+    print(f"Top {int(pct*100)}% Capture:",
+          captured / total_fraud)
+
+
+
 import xgboost as xgb
 import joblib
 
