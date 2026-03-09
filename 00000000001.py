@@ -3,7 +3,10 @@ obj_cols = X_train_base.select_dtypes(include=["object"]).columns
 for c in obj_cols:
     X_train_base[c] = X_train_base[c].astype("category")
 
+train_base[c] = train_base[c].astype("category")
+train_base[c] = train_base[c].astype("category")
 
+print(X_train_base.dtypes.value_counts())
 
 
 
