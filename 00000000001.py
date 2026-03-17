@@ -1,3 +1,35 @@
+
+
+
+import subprocess
+
+# Run first script
+print("Running run_1.py...")
+result1 = subprocess.run(["python", "run_1.py"])
+
+if result1.returncode != 0:
+    print("run_1.py failed. Stopping execution.")
+    exit(1)
+
+# Run second script only after first completes
+print("Running run_2.py...")
+result2 = subprocess.run(["python", "run_2.py"])
+
+if result2.returncode != 0:
+    print("run_2.py failed.")
+else:
+    print("Both scripts completed successfully.")
+
+
+
+
+
+
+
+
+
+
+
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 if __name__ == "__main__":
