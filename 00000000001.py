@@ -1,4 +1,27 @@
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
+if __name__ == "__main__":
+    start_time = time.time()
+    inputs = list(range(1201, 1401))
+
+    results = []
+
+    with ProcessPoolExecutor(max_workers=26) as ex:
+        futures = {ex.submit(safe_process, i): i for i in inputs}
+
+        for future in as_completed(futures):
+            file_id = futures[future]
+            try:
+                res = future.result()
+                if res is not None:
+                    results.append(res)
+            except Exception as e:
+                print(f"FAILED file {file_id}: {e}")
+
+    end_time = time.time()
+    duration = end_time - start_time
+
+    print(f"Time taken: {int(duration // 60)} min {duration % 60:.2f} sec")
 
 
 
