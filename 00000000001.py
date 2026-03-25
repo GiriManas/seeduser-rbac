@@ -1,4 +1,15 @@
+common_cols = ['account_id', 'fraud_tag', 'amount']
 
+raw_small = raw_df[common_cols + ['feature1', 'feature2']].copy()
+
+raw_small['_row_id'] = raw_small.groupby(common_cols).cumcount()
+df2['_row_id'] = df2.groupby(common_cols).cumcount()
+
+result = df2.merge(
+    raw_small,
+    on=common_cols + ['_row_id'],
+    how='left'
+).drop(columns=['_row_id'])
 
 
 import subprocess
