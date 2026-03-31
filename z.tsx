@@ -2,6 +2,18 @@
 https://aclanthology.org/2023.nlposs-1.24/
 https://arxiv.org/abs/2411.05276
 
+If similarity > threshold → return cached
+
+If similarity high
+AND confidence high
+AND reasoning aligned
+→ return cached
+ELSE → recompute
+
+
+“We reviewed existing work like GPTCache and semantic embedding-based caching. Current systems focus on similarity, but there is a gap in reliability-aware caching.”
+
+
 
 
 2. “Prompt Fingerprinting System”
