@@ -18,6 +18,10 @@ ELSE → recompute
 
 2. “Prompt Fingerprinting System”
 
+https://arxiv.org/abs/2402.01173
+
+https://arxiv.org/abs/2402.18458
+
 
 Convert every prompt into a unique “identity” so the system can recognize similar or repeated prompts
 
