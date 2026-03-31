@@ -1,3 +1,21 @@
+1. “Semantic Cache for LLMs” (Very strong & practical)
+
+
+2. “Prompt Fingerprinting System”
+
+3. “LLM Output Risk Scoring Engine”
+
+
+
+
+
+
+
+
+
+
+
+
 import {
   BarChart as RechartsBarChart,
   Bar as RechartsBar,
