@@ -1,4 +1,7 @@
 1. “Semantic Cache for LLMs” (Very strong & practical)
+https://aclanthology.org/2023.nlposs-1.24/
+https://arxiv.org/abs/2411.05276
+
 
 
 2. “Prompt Fingerprinting System”
