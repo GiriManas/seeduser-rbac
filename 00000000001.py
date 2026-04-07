@@ -74,6 +74,39 @@ The assigned cluster and associated metrics enable identification of potential a
 
 
 
+Ways to Update Clustering with Streaming Data
+
+🔷 1. Incremental (Online) K-Means — ⭐ Recommended
+
+🔹 How it works:
+	•	Each new transaction:
+	1.	Assign to nearest cluster
+	2.	Update centroid slightly
+  
+  
+2. Mini-Batch Updates (Streaming Batches)
+
+🔹 How it works:
+	•	Collect small batch (e.g., 1000 transactions)
+	•	Update clusters periodically
+
+🔷 3. Periodic Re-Clustering (Hybrid Approach) — ⭐ MOST PRACTICAL
+
+🔹 Strategy:
+	•	Real-time: assign to clusters
+	•	Periodically (daily/weekly):
+	•	Recompute clusters fully
+
+
+🔷 4. Streaming Clustering Frameworks
+
+Options:
+	•	Spark Structured Streaming + MLlib
+	•	River (online ML library)
+	•	Flink ML
+
+
+
 
 
 
