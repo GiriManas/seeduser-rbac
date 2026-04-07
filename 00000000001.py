@@ -34,6 +34,52 @@ For large-scale datasets, clustering may be implemented in a distributed manner:
 
 
 
+(New Section)
+
+🔷 Add a NEW BOX after clustering:
+
+“Scoring New Observations (Cluster Assignment & Risk Scoring)”
+
+
+Input
+
+New transaction data processed into embedding representation using the trained model
+
+Process
+
+Assign the new transaction to an existing cluster based on similarity in embedding space.
+
+Cluster assignment may be performed by:
+• Computing distance to cluster centroids (e.g., nearest centroid assignment)
+• Using nearest-neighbor search against clustered embeddings (e.g., FAISS)
+• Applying trained clustering models (e.g., K-Means predict step)
+
+Compute a risk score using:
+• Cluster-level statistics (e.g., fraud rate of assigned cluster)
+• Distance-based measures (e.g., distance to fraud centroid or nearest fraud instance)
+• Model prediction probability
+
+In distributed environments:
+• Broadcast cluster centroids to scoring nodes
+• Perform parallel similarity computations for real-time or batch scoring
+
+
+Output
+
+Assigned cluster ID and associated risk score for the new transaction
+
+
+The assigned cluster and associated metrics enable identification of potential anomalies or fraud in incoming transactions.
+
+
+
+
+
+
+
+
+
+
 
 
 
