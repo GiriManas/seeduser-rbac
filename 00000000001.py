@@ -1,3 +1,42 @@
+Apply scalable clustering on embeddings using distributed frameworks:
+
+• Distributed K-Means (e.g., Spark MLlib) for large-scale clustering  
+• Mini-batch K-Means for memory-efficient processing  
+• FAISS (GPU-accelerated) for fast similarity-based clustering  
+• Optional: Density-based methods (DBSCAN / HDBSCAN) for irregular patterns  
+
+Distributed Execution:
+• Partition embeddings across compute nodes  
+• Parallel computation of distances and centroid updates  
+• Iterative refinement of clusters across workers  
+
+
+Other wordings
+
+Employ a clustering approach on embedding representations to group 
+transactions based on similarity in the embedding space.
+
+Clustering may be performed using:
+• Direct clustering on high-dimensional embeddings (e.g., K-Means)
+• Dimensionality reduction followed by clustering:
+  – PCA for scalable linear reduction
+  – t-SNE / UMAP for non-linear projection (e.g., visualization or exploratory analysis)
+
+For large-scale datasets, clustering may be implemented in a distributed manner:
+• Partition embeddings across compute nodes
+• Perform parallel distance computations and centroid updates
+• Use distributed frameworks (e.g., Spark MLlib) or vector search systems (e.g., FAISS)
+
+
+
+
+
+
+
+
+
+
+
 common_cols = ['account_id', 'fraud_tag', 'amount']
 
 raw_small = raw_df[common_cols + ['feature1', 'feature2']].copy()
