@@ -1,3 +1,17 @@
+from google.cloud import storage
+
+client = storage.Client()
+bucket = client.bucket("prod-corp-pyfarm-amrm-a18d-k104630")
+
+blob = bucket.blob("test/hello.txt")
+blob.delete()
+
+print("Deleted successfully")
+
+
+
+
+
 
 bucket = client.bucket("prod-corp-pyfarm-amrm-a18d-k104630")
 
