@@ -6,7 +6,15 @@ blobs = list(bucket.list_blobs())
 print([b.name for b in blobs[:20]])
 
 
+from google.cloud import storage
 
+client = storage.Client()
+bucket = client.bucket("prod-corp-pyfarm-amrm-a18d-k104630")
+
+blob = bucket.blob("test/hello.txt")
+blob.upload_from_string("Hello from Pyfarm!")
+
+print("Uploaded successfully")
 
 
 
