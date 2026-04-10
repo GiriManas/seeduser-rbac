@@ -1,3 +1,16 @@
+
+bucket = client.bucket("prod-corp-pyfarm-amrm-a18d-k104630")
+
+blobs = list(bucket.list_blobs())
+
+print([b.name for b in blobs[:20]])
+
+
+
+
+
+
+
 Apply scalable clustering on embeddings using distributed frameworks:
 
 • Distributed K-Means (e.g., Spark MLlib) for large-scale clustering  
