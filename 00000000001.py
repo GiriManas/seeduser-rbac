@@ -9,6 +9,31 @@ for root, dirs, filenames in os.walk(VAR_SOURCE):
 
 def upload(file):
     dest = file.replace(VAR_SOURCE, VAR_DESTINATION)
+    s3.put(file, f"s3://{dest}")
+
+with ThreadPoolExecutor(10) as ex:
+    list(ex.map(upload, files))
+    
+
+
+
+
+
+
+
+
+
+from concurrent.futures import ThreadPoolExecutor
+import os
+
+files = []
+
+for root, dirs, filenames in os.walk(VAR_SOURCE):
+    for f in filenames:
+        files.append(os.path.join(root, f))
+
+def upload(file):
+    dest = file.replace(VAR_SOURCE, VAR_DESTINATION)
     s3.put(file, dest)
     return file
 
