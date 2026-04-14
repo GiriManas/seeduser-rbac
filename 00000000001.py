@@ -1,3 +1,31 @@
+from concurrent.futures import ThreadPoolExecutor
+import os
+
+files = []
+
+for root, dirs, filenames in os.walk(VAR_SOURCE):
+    for f in filenames:
+        files.append(os.path.join(root, f))
+
+def upload(file):
+    dest = file.replace(VAR_SOURCE, VAR_DESTINATION)
+    s3.put(file, dest)
+    return file
+
+with ThreadPoolExecutor(8) as executor:
+    list(executor.map(upload, files))
+
+
+
+
+
+
+
+
+
+
+
+
 from google.cloud import storage
 
 client = storage.Client()
