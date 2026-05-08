@@ -1,3 +1,89 @@
+import ctypes
+import random
+import time
+
+user32 = ctypes.windll.user32
+
+# Mouse event constants
+MOUSEEVENTF_MOVE = 0x0001
+MOUSEEVENTF_RIGHTDOWN = 0x0008
+MOUSEEVENTF_RIGHTUP = 0x0010
+
+# Keyboard constants
+VK_TAB = 0x09
+VK_MENU = 0x12   # ALT key
+
+# Screen size
+screen_width = user32.GetSystemMetrics(0)
+screen_height = user32.GetSystemMetrics(1)
+
+def move_mouse_slightly():
+    x = random.randint(200, screen_width - 200)
+    y = random.randint(200, screen_height - 200)
+
+    user32.SetCursorPos(x, y)
+
+def press_alt_tab():
+    # ALT down
+    user32.keybd_event(VK_MENU, 0, 0, 0)
+
+    # TAB press
+    user32.keybd_event(VK_TAB, 0, 0, 0)
+    user32.keybd_event(VK_TAB, 0, 2, 0)
+
+    # ALT up
+    user32.keybd_event(VK_MENU, 0, 2, 0)
+
+def harmless_right_click():
+    # Right click at current position
+    user32.mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0)
+    user32.mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0)
+
+def press_shift():
+    VK_SHIFT = 0x10
+    user32.keybd_event(VK_SHIFT, 0, 0, 0)
+    time.sleep(0.05)
+    user32.keybd_event(VK_SHIFT, 0, 2, 0)
+
+print("Running human-like activity simulation...")
+
+while True:
+    action = random.choice([
+        "move",
+        "move",
+        "move",
+        "shift",
+        "right_click",
+        "alt_tab"
+    ])
+
+    if action == "move":
+        move_mouse_slightly()
+        print("Mouse moved")
+
+    elif action == "shift":
+        press_shift()
+        print("Shift pressed")
+
+    elif action == "right_click":
+        harmless_right_click()
+        print("Right click")
+
+    elif action == "alt_tab":
+        press_alt_tab()
+        print("Alt+Tab pressed")
+
+    # Random wait between actions
+    wait_time = random.randint(20, 90)
+    print(f"Waiting {wait_time} seconds...\n")
+
+    time.sleep(wait_time)
+
+
+
+
+
+
 from concurrent.futures import ThreadPoolExecutor
 import os
 
