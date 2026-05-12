@@ -1,3 +1,27 @@
+
+
+data = [
+
+    (1, "HR", 5000),
+
+    (2, "HR", 7000),
+
+    (3, "IT", 6000),
+
+    (4, "IT", None),
+
+    (5, "IT", 8000)
+
+]
+
+columns = ["emp_id", "dept_id", "salary"]
+
+df = spark.createDataFrame(data, columns)
+
+df.show()
+
+
+
 import ctypes
 import random
 import time
