@@ -1,3 +1,46 @@
+-- =========================================
+-- TABLE T1 (PARENT TABLE)
+-- 15 PRIMARY KEYS
+-- =========================================
+
+CREATE TABLE T1 (
+    col1 INT PRIMARY KEY
+);
+
+INSERT INTO T1 VALUES
+(1),(2),(3),(4),(5),
+(6),(7),(8),(9),(10),
+(11),(12),(13),(14),(15);
+
+-- =========================================
+-- TABLE T2 (CHILD TABLE)
+-- col2 is foreign key referencing T1.col1
+-- =========================================
+
+CREATE TABLE T2 (
+    col1 INT,
+    col2 INT,
+    FOREIGN KEY (col2) REFERENCES T1(col1)
+);
+
+INSERT INTO T2 VALUES
+(101,1),
+(102,1),
+(103,2),
+(104,3),
+(105,3),
+(106,3),
+(107,7),
+(108,10),
+(109,15);
+
+
+
+
+
+
+
+
 
 
 data = [
