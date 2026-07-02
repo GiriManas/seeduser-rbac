@@ -1902,3 +1902,48 @@ plt.scatter(
 )
 plt.title("K-Means clusters (synthetic data)")
 plt.show()
+
+
+
+hierarchy = [("A", None), ("B", "A"), ("C", "B")]
+
+print(hierarchy)
+
+parents = {node: parent for node, parent in hierarchy}
+print("CHecking the parents:", parents)
+
+def flatten_hierarchy(hierarchy):
+
+    parents = {node: parent for node, parent in hierarchy}
+
+    memo = {}
+
+    def get_path(node):
+        if node in memo:
+            return memo[node]
+
+        parent = parents[node]
+
+        if parent is None:
+            memo[node] = [node]
+        else:
+            memo[node] = get_path(parent) + [node]
+
+        return memo[node]
+
+    result = []
+
+    for node in parents:
+        result.append((node, get_path(node)))
+
+    return result
+
+hierarchy = [
+    ("A", None),
+    ("B", "A"),
+    ("C", "B")
+]
+
+print(flatten_hierarchy(hierarchy))
+
+Can you explain me this one by one
