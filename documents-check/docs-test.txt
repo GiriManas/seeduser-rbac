@@ -1,0 +1,22 @@
+T1: Prompt Ingestion & Normalization
+
+Input
+
+The Prompt Ingestion and Normalization module receives the initial user request submitted to the Prompt Fingerprinting System. The input may consist of textual prompts, uploaded documents, files, images, or other multimodal content, along with associated conversation history, system or tool metadata, and user or organizational metadata. These inputs collectively represent the complete request context required for downstream processing.
+
+⸻
+
+Process
+
+The Prompt Ingestion and Normalization module validates, consolidates, and standardizes the incoming request to produce a consistent representation suitable for feature extraction. The module first ingests the prompt along with all associated contextual information and attached content, ensuring that the complete request context is captured. It then performs normalization by removing formatting inconsistencies, redundant whitespace, unnecessary special characters, and other textual noise while preserving the semantic meaning of the prompt. The module further standardizes spelling, punctuation, and canonical representations to ensure that semantically identical prompts are represented consistently, thereby reducing variations caused by differences in user writing style or formatting.
+
+⸻
+
+Output
+
+The Prompt Ingestion and Normalization module produces a normalized prompt together with any associated content and a consolidated metadata bundle. The normalized representation preserves the original intent of the user while eliminating superficial variations, thereby providing a consistent and standardized input for the Feature Extraction Engine (T2) to accurately derive semantic, structural, and contextual features.
+
+
+
+
+
