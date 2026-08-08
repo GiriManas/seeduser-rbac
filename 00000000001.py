@@ -1,4 +1,8 @@
 
+The normalized prompt and associated metadata are analyzed to derive a comprehensive set of features that characterize the prompt beyond its raw textual representation. The extraction process identifies three primary categories of features: semantic features that capture the meaning, intent, entities, and topics of the prompt; structural features that capture how the prompt is constructed, including its instructions, constraints, complexity, and expected output format; and contextual features that capture the operational context, such as the applicable domain, required capabilities, referenced tools or APIs, input/output requirements, and security attributes.
+
+The extracted features are then consolidated into a unified feature representation that preserves the different dimensions of the prompt. This representation provides a richer characterization than semantic information alone and is subsequently used by T3 for generating the Prompt Fingerprint.
+
 
 
 The normalized prompt and associated metadata are analyzed to extract three categories of features: semantic features representing the meaning and intent of the prompt, structural features representing its composition, instructions, constraints, and expected output format, and contextual features representing its domain, required capabilities, referenced tools or APIs, input/output requirements, and applicable security attributes. The extracted features are consolidated into a unified representation of the prompt.
