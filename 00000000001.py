@@ -1,3 +1,11 @@
+The Prompt Ingestion and Normalization module receives an incoming prompt request intercepted from the GenAI application or LLM interaction layer before execution by the target LLM. The input may consist of textual prompts, uploaded documents, files, images, or other multimodal content, together with associated conversation history, system or tool metadata, and user or organizational metadata. These inputs collectively represent the request and its execution context that are made available to the Prompt Fingerprinting System for subsequent feature extraction and fingerprint generation.
+
+
+
+
+
+
+
 -- =========================================
 -- TABLE T1 (PARENT TABLE)
 -- 15 PRIMARY KEYS
