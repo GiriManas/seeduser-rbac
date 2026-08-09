@@ -1,4 +1,102 @@
 
+Use two scenarios throughout the entire architecture
+
+Example 1 — New Prompt
+
+“Summarize the attached quarterly financial report into five key findings and highlight any significant changes from the previous quarter.”
+
+Assume this prompt has never been seen before.
+
+Example 2 — Existing / Similar Prompt
+
+“Summarize the attached quarterly financial report into five key findings and highlight the major changes from the previous quarter.”
+
+Assume a semantically similar prompt and its Prompt Fingerprint already exist in the registry.
+
+⸻
+
+How the examples should appear beside each T box
+
+For example, beside T1, we can have:
+
+Example 1 — New Prompt
+
+User submits a new prompt with an attached financial report. T1 ingests the prompt, attachment, conversation context and metadata, and normalizes the request.
+
+Example 2 — Existing / Similar Prompt
+
+User submits a prompt with the same objective as a previously processed request. T1 performs the same ingestion and normalization; at this stage, it does not yet determine whether the prompt is new or existing.
+
+That last point is important: T1 shouldn’t say it knows the prompt is old/new. That determination happens later.
+
+⸻
+
+Then T2
+
+Example 1 — New Prompt
+
+T2 extracts semantic, structural and contextual features from the normalized request, such as summarization intent, financial-report domain, five-item output requirement and comparison requirement.
+
+Example 2 — Existing / Similar Prompt
+
+T2 extracts the corresponding features. Although the wording may differ slightly from the previously processed prompt, the resulting feature representation may be highly similar.
+
+⸻
+
+T3
+
+Example 1 — New Prompt
+
+T3 converts the extracted features into a Prompt Fingerprint and generates a new PF-ID.
+
+Example 2 — Existing / Similar Prompt
+
+T3 generates a Prompt Fingerprint for the current request. The fingerprint can subsequently be compared with fingerprints already stored in the registry.
+
+⸻
+
+T4 — this is where the paths become interesting
+
+Example 1 — New Prompt
+
+T4 finds no equivalent or sufficiently similar Prompt Fingerprint. A new Prompt Identity and, where applicable, a new Prompt Family are created and registered.
+
+Example 2 — Existing / Similar Prompt
+
+T4 identifies an equivalent or semantically similar Prompt Fingerprint already registered in the repository and associates the current request with the existing Prompt Identity and Prompt Family.
+
+This is probably the most important example in the entire diagram, because it demonstrates why the Prompt Identity Registry exists.
+
+⸻
+
+T5
+
+Then both examples can converge again.
+
+Example 1 — New Prompt
+
+T5 uses the newly registered Prompt Identity and available execution decisions to determine the appropriate execution path, model and parameters, and executes the request.
+
+Example 2 — Existing / Similar Prompt
+
+T5 uses the existing Prompt Identity, historical execution information and applicable decisions to determine whether a cached response can be reused or whether model execution is required.
+
+⸻
+
+T6
+
+Example 1 — New Prompt
+
+T6 receives the execution results and operational feedback, evaluates the performance of the new Prompt Fingerprint and updates the associated identity and feature information.
+
+Example 2 — Existing / Similar Prompt
+
+T6 uses the accumulated execution history of the existing Prompt Identity and Prompt Family to identify performance patterns and refine feature weights, family relationships or fingerprint versions.
+
+
+
+
+===€€€€$$$$<<<]££€€]++%%%]+==========
 The input consists of the current prompt request together with the Prompt Fingerprint and associated prompt identity information retrieved from the Prompt Identity Registry (T4). This may include the Prompt Fingerprint, Prompt Family, feature representation, execution history, and associated metadata required for execution decisioning.
 
 
