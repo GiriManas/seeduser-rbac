@@ -1,4 +1,9 @@
 
+The input consists of the current prompt request together with the Prompt Fingerprint and associated prompt identity information retrieved from the Prompt Identity Registry (T4). This may include the Prompt Fingerprint, Prompt Family, feature representation, execution history, and associated metadata required for execution decisioning.
+
+
+
+
 
 T5: Inference / Execution Router
 
