@@ -1,3 +1,30 @@
+
+
+T3: Prompt Fingerprint Generation
+
+Input:
+The system receives the features identified in T2, including information about the prompt’s meaning, structure, context, security information, and other related details.
+
+Process:
+The system uses these features to create a Prompt Fingerprint that represents the prompt. It combines information about the prompt’s meaning, structure, and context to create a representation that can be used to recognize the prompt later. The system may also generate additional information, such as a confidence score and a complexity or risk score.
+
+Output:
+The system produces a Prompt Fingerprint Identifier (PF-ID) along with the fingerprint representation and related information, such as the feature summary, confidence score, and complexity or risk score. The Prompt Fingerprint is then provided to T4: Prompt Identity Registry for storage and management.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Input:
 The system receives the cleaned and standardized prompt from T1, along with any related files, conversation information, and other information associated with the prompt.
 
