@@ -1,4 +1,23 @@
 Input:
+The system receives the cleaned and standardized prompt from T1, along with any related files, conversation information, and other information associated with the prompt.
+
+Process:
+The system examines the prompt to understand three main things:
+
+* Meaning: What the prompt is asking for, including its intent, topics, and important entities.
+* Structure: How the prompt is written, including instructions, requirements, restrictions, complexity, and the expected type of answer.
+* Context: Information about the situation in which the prompt is being used, such as the business area, required capabilities, tools or APIs, input or output requirements, and security-related information.
+
+The system combines these characteristics into a single representation of the prompt.
+
+Output:
+The system produces a combined set of features describing the prompt’s meaning, structure, and context.
+
+
+
+
+@@@@@@@@@@@@&@&@&&&'km
+Input:
 The system receives the user’s prompt along with any related files, images, conversation history, tool information, and other information available with the request.
 
 Process:
