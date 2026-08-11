@@ -1,3 +1,23 @@
+Input:
+The system receives the user’s prompt along with any related files, images, conversation history, tool information, and other information available with the request.
+
+Process:
+The system collects all the information related to the prompt and puts it into a common format. It removes unnecessary differences such as extra spaces, formatting, or other variations while keeping the original meaning of the prompt unchanged.
+
+Output:
+The system produces a cleaned and standardized version of the prompt, together with the related information. This becomes the input for the next step
+
+
+
+
+
+
+------
+
+
+
+
+
 
 Use two scenarios throughout the entire architecture
 
