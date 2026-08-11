@@ -1,3 +1,27 @@
+
+T5: Inference / Execution Router
+
+Input:
+The system receives the current prompt along with the Prompt Fingerprint and related information from T4. This information may include the Prompt Family, previous execution information, and other details about the prompt.
+
+Process:
+The system uses this information to decide how the prompt should be handled. It first checks whether a previous response can be reused. If not, it determines how the prompt should be processed, including which model to use and what prompt or security settings should be applied. The prompt is then sent to the selected model for processing.
+
+During this process, the system records information such as the model used, response result, processing time, cost, token usage, and whether a cached response was used.
+
+Output:
+The system produces either a new response from the selected model or a previously stored response. It also produces information about how the prompt was processed, which can be used to update the Prompt Identity Registry and support future improvements.
+
+
+
+
+
+
+
+
+₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹
+
+
 T4: Prompt Identity Registry
 
 Input:
