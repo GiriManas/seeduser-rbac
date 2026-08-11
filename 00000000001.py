@@ -1,3 +1,55 @@
+
+Step
+
+Example 1 — New Prompt
+
+Example 2 — Similar Older Prompt
+
+T1: Ingestion & Normalization
+
+Receive: “Summarize this report and identify the 3 biggest risks.” Clean and standardize the request.
+
+Receive: “Summarize this report and list the key business risks.” Clean and standardize the request.
+
+T2: Feature Extraction
+
+Extract: summarization, risk identification, business report, 3 risks, expected output, etc.
+
+Extract: summarization, risk identification, business report, key risks, expected output, etc.
+
+T3: Fingerprint Generation
+
+Create a fingerprint representing these characteristics.
+
+Create a fingerprint representing these characteristics.
+
+T4: Identity Registration
+
+Check the registry → no matching fingerprint found → create new Prompt Identity / Family.
+
+Check the registry → matching/similar fingerprint found → associate with existing Prompt Identity / Family.
+
+T5: Execution Router
+
+Use the prompt identity and available decisions to determine execution → execute the request.
+
+Use the existing identity/history and available decisions → check for reusable response or determine execution.
+
+T6: Learning Engine
+
+Record the execution experience for the new identity.
+
+Add the new execution experience to the existing identity/family and learn from previous executions.
+
+
+
+
+
+
+
+
+--------------
+
 Step
 
 Example 1 — New Prompt
