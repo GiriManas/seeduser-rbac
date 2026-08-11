@@ -1,3 +1,63 @@
+Step
+
+Example 1 — New Prompt
+
+Example 2 — Similar Older Prompt
+
+
+PROMPT
+
+ "Summarize report        "Summarize report and
+
+  and identify 3 risks"    list key business risks
+
+
+
+
+T1
+
+Receive and standardize new request
+
+Receive and standardize similar request
+
+T2
+
+Identify topic, task, risks, expected output
+
+Identify characteristics and similarity to existing prompt
+
+T3
+
+Generate new fingerprint PF-1001
+
+Identify similarity to existing fingerprint PF-0520
+
+T4
+
+No match → create and store new identity
+
+Match found → associate with existing identity/family
+
+T5
+
+No reusable answer → execute using selected model
+
+Check for reusable answer → return cached answer or execute
+
+T6
+
+Learn from first execution and add history
+
+Compare with previous executions and update history
+
+
+
+
+
+
+
+
+
 Input:
 The system receives information about how prompts were handled, such as which Prompt Fingerprint and Prompt Family were used, which model was selected, how long the request took, how much it cost, whether a cached response was used, whether the request was successful, and any available user feedback.
 
