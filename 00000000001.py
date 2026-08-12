@@ -1,4 +1,16 @@
 
+T2: Feature Extraction
+
+Process: The system analyzes the normalized prompt using a set of feature-extraction functions to identify key characteristics, including meaning, structure, purpose, and context. These functions parse the prompt to identify instructions, requirements, constraints, expected output, and other relevant attributes. Semantic analysis may additionally be used to determine the meaning and relationships between prompt elements. The extracted characteristics are converted into a structured set of features that can be consistently used by subsequent stages of the system.
+
+
+
+
+
+
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 Innovations
 
 1. Multi-dimensional Prompt Fingerprinting
