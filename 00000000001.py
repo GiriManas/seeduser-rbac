@@ -1,4 +1,22 @@
+Your T6 could therefore be
 
+Input:
+The system receives information about how prompts were handled, such as which Prompt Fingerprint and Prompt Family were used, when the request was submitted, how long the request took, how much it cost, whether a cached response was used, and any available user feedback.
+
+Process:
+The system analyzes the historical execution and feedback information associated with Prompt Fingerprints and Prompt Families. It evaluates factors such as usage patterns, execution time, cost, response outcomes, and user feedback to determine how prompts and Prompt Families are performing. Based on these patterns, the system improves Prompt Families and uses the information to make future execution decisions. Where a significant change is identified, the system can create an updated version of the Prompt Fingerprint while retaining the earlier version for reference.
+
+Output:
+The system produces updated Prompt Fingerprints, improved Prompt Families, and updated information about how each prompt can be managed, routed, and processed more effectively.
+
+
+
+
+
+
+
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 The system analyzes the normalized prompt using a set of feature-extraction functions to identify key characteristics, including meaning, structure, purpose, and context. These functions parse the prompt to identify instructions, requirements, constraints, expected output, and other relevant attributes. The extracted attributes are normalized into a structured feature representation, with semantic analysis used where required to capture the meaning and relationships between prompt elements. The resulting features are used by subsequent stages of the system.
 
 
