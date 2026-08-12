@@ -15,7 +15,7 @@ The resulting feature representation provides a multi-dimensional description of
 
 
 
-
+Output: The system produces a structured feature representation containing the extracted semantic, intent, entity, structural, and contextual characteristics of the prompt. The representation may include semantic embeddings, extracted attributes, classifications, and associated metadata. This representation is provided to T3 for generation of the Prompt Fingerprint.
 -------------------
 
 
