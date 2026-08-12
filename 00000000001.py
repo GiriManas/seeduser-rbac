@@ -1,3 +1,33 @@
+
+Process:
+
+The system analyzes the normalized prompt using a combination of natural language processing, machine-learning, and rule-based techniques to extract different characteristics of the prompt. The extraction may include:
+
+1. Semantic representation – generates a semantic embedding/vector representing the overall meaning of the prompt and identifies the primary topic or subject matter.
+2. Intent and task extraction – identifies the user’s requested action, such as summarization, classification, question answering, generation, comparison, or data extraction, using language-model-based classification or other intent-classification techniques.
+3. Entity and concept extraction – identifies important entities, keywords, concepts, and domain-specific terms using techniques such as named-entity recognition, keyword extraction, and language-model-based information extraction.
+4. Structural feature extraction – identifies instructions, constraints, conditions, number of requested outputs, expected response format, input/output requirements, and relationships between different parts of the prompt using parsing, pattern detection, or language-model-based analysis.
+5. Contextual feature extraction – identifies information such as application/domain, referenced tools or APIs, attached content, conversation context, and available user or organizational metadata.
+6. Operational and security feature extraction – identifies applicable security, privacy, governance, sensitivity, or execution-related attributes using rules, classifiers, or other policy-based analysis.
+7. Feature normalization and consolidation – converts the extracted information into consistent representations and combines the semantic vectors, extracted attributes, classifications, structural characteristics, and contextual metadata into a unified feature representation.
+
+The resulting feature representation provides a multi-dimensional description of the prompt and is passed to T3 for Prompt Fingerprint Generation.
+
+
+
+
+-------------------
+
+
+
+
+
+
+
+
+
+
+
 Your T6 could therefore be
 
 Input:
