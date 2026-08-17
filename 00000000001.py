@@ -1,3 +1,59 @@
+T5: Inference / Execution Router
+
+1. INPUT — change this
+
+Your current input is already good, but it doesn’t explicitly say that T5 receives the reusable outputs we added to T4.
+
+I recommend:
+
+Input: The system receives the current prompt request together with the Prompt Fingerprint and associated prompt identity information retrieved from the Prompt Identity Registry (T4). This may include the Prompt Fingerprint, Prompt Family, feature representation, previous responses, intermediate results, generated scripts or code, tool results, execution history, and other associated information.
+
+This makes it clear that T5 has access to the things that may potentially be reused.
+
+⸻
+
+2. PROCESS — this is the important change
+
+Your current process starts with:
+
+“The execution router uses the Prompt Fingerprint and the associated decisions to determine the appropriate execution path…”
+
+Then it mainly talks about semantic cache / reusable response vs new model execution.
+
+We need to broaden this.
+
+I recommend replacing the current Process with:
+
+Process: The system uses the Prompt Fingerprint and the information from previous executions to determine how the current prompt should be handled. It first checks whether useful information from a previous execution can be reused. This may include a previous response, intermediate result, generated script or code, tool result, or other output.
+
+If suitable information is available, the system may reuse the information directly or use it as an input for processing the current prompt. This can reduce the need for a new model execution and may reduce token usage, execution time, and cost.
+
+If suitable previous information is not available, or if it is not sufficient for the current prompt, the system performs a new model execution. The system may use the Prompt Fingerprint, Prompt Family, previous execution information, and other available information to select the appropriate model and execution settings.
+
+During processing, the system records relevant information such as the selected model, execution result, latency, cost, token usage, whether previous information was reused, and other feedback. This information can be provided back to the Prompt Identity Registry (T4) and Fingerprint Learning Engine (T6).
+
+⸻
+
+3. OUTPUT — change this
+
+Your current Output says:
+
+“The output consists of the executed response or a reusable cached response…”
+
+That is now too narrow because the Director specifically wants intermediate results, scripts/code, etc.
+
+I recommend:
+
+Output: The system produces a response using either suitable information reused from a previous execution or a newly executed model. The output may include a reused response, intermediate result, generated script or code, tool result, or newly generated response, together with the associated execution information.
+
+The execution and reuse information is provided back to the Prompt Identity Registry (T4) for maintaining the execution history and to the Fingerprint Learning Engine (T6) for subsequent learning and refinement.
+
+
+
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@
+
 Process: The system checks whether the Prompt Fingerprint, or a similar fingerprint, already exists in the registry. If a matching prompt identity is found, the new prompt is linked to that existing identity. If no match is found, a new prompt identity is created.
 
 The system stores the Prompt Fingerprint and related information, including information about previous executions and outputs produced during those executions. This may include previous responses, intermediate results, generated scripts or code, tool results, model information, and other useful outputs produced while processing the prompt.
