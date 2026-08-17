@@ -1,3 +1,17 @@
+Process: The system checks whether the Prompt Fingerprint, or a similar fingerprint, already exists in the registry. If a matching prompt identity is found, the new prompt is linked to that existing identity. If no match is found, a new prompt identity is created.
+
+The system stores the Prompt Fingerprint and related information, including information about previous executions and outputs produced during those executions. This may include previous responses, intermediate results, generated scripts or code, tool results, model information, and other useful outputs produced while processing the prompt.
+
+The system can also group similar prompts into Prompt Families and keep information about how the prompts were used and performed over time. This information is made available to later processing so the system can determine whether information from a previous execution can be reused or whether a new model execution is needed.
+
+
+
+
+
+
+
+
+
 Input
 
 The system receives the Prompt Fingerprint, along with the information used to describe the prompt. It may also receive information from previous prompt processing, such as the model used, execution results, responses, intermediate results, generated scripts or code, cache usage, and user feedback.
