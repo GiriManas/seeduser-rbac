@@ -1,3 +1,20 @@
+
+
+
+Process: The system analyzes the collected information to understand how prompts and Prompt Families are being used and how useful previous information or outputs are when considered for similar prompts. It looks for patterns such as whether previous responses, intermediate results, generated scripts or code, tool results, or other outputs are useful for similar prompts, and whether using such information can reduce processing time, cost, or token usage.
+
+The system also analyzes execution results, user feedback, model performance, and other available information to identify changes in prompt behavior. Based on these observations, it updates the Prompt Fingerprint, Prompt Family information, and other related information to support improved prompt matching and processing.
+
+Where significant changes are identified, the system can create an updated version of the Prompt Fingerprint while retaining the earlier version for reference.
+
+
+
+
+
+
+
+
+
 Yes. Now let’s move to T6: Fingerprint Learning Engine.
 
 Based on the Director’s feedback, I would make T6 slightly broader so that it learns not only from model execution results, but also from what was reused from previous executions and how useful that reuse was.
