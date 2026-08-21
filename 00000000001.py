@@ -1,3 +1,9 @@
+
+
+The system produces a Prompt Fingerprint Identifier (PF-ID) along with the fingerprint representation and related information, such as the feature summary, confidence score, and complexity or risk score. The PF-ID and fingerprint representation are provided to the next step for association with the prompt and information generated during its processing.
+
+
+
 The Prompt Fingerprint provides a consistent identifier and representation that can be associated with information generated during subsequent prompt processing, including execution results, intermediate results, generated scripts or code, tool results, and other outputs.
 
 
