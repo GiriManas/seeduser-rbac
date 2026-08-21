@@ -1,4 +1,11 @@
 
+
+The Prompt Fingerprint provides an identifier and representation that can be used to identify and compare the prompt and to associate information generated during subsequent prompt processing, including execution results, intermediate results, generated scripts or code, tool results, and other outputs.
+
+
+
+
+
 T6: Fingerprint Learning Engine
 
 Input:
