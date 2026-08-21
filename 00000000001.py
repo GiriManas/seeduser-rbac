@@ -1,4 +1,21 @@
 
+The system evaluates the current prompt against the Prompt Fingerprint and information associated with previous executions to identify information that may be applicable to the current request. This may include previous responses, intermediate results, generated scripts or code, tool results, or other execution outputs. The system retrieves applicable artifacts associated with the Prompt Fingerprint or Prompt Family and evaluates their relevance and sufficiency for the current prompt.
+
+
+
+
+======
+
+
+
+
+
+
+
+
+
+
+
 Process: The system evaluates the current prompt against the Prompt Fingerprint and information associated with previous executions to identify information that may be applicable to the current request. This may include previous responses, intermediate results, generated scripts or code, tool results, or other execution outputs.
 
 When applicable information is identified, the system evaluates whether it is sufficient for the current prompt and determines how it can be used during processing. For example, an intermediate result or generated script from a previous execution may be used as an input to the current processing.
