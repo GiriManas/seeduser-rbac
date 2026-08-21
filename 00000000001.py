@@ -1,4 +1,23 @@
 
+Process: The system evaluates the current prompt against the Prompt Fingerprint and information associated with previous executions to identify information that may be applicable to the current request. This may include previous responses, intermediate results, generated scripts or code, tool results, or other execution outputs.
+
+When applicable information is identified, the system evaluates whether it is sufficient for the current prompt and determines how it can be used during processing. For example, an intermediate result or generated script from a previous execution may be used as an input to the current processing.
+
+If the available information is not applicable or sufficient, the system performs a new model execution. The system may use the Prompt Fingerprint, Prompt Family, previous execution information, and other available information to select the appropriate model and execution settings.
+
+During processing, the system records relevant information such as the selected model, execution result, latency, cost, token usage, and other feedback. This information can be provided back to the Prompt Identity Registry and Fingerprint Learning Engine.
+
+
+
+
+Output: The system produces the result of the current prompt processing, which may incorporate applicable information from previous executions or information generated through a new model execution. The output may include a response, intermediate result, generated script or code, tool result, or other execution output, together with the associated execution information.
+
+
+
+
+
+
+##############################
 1. T4 Input — change slightly
 
 Currently:
