@@ -1,4 +1,34 @@
 
+Hi Sir,
+
+Hope you are doing well.
+
+I had to travel to my hometown at short notice last week due to a medical emergency, as my brother-in-law met with an accident. Thankfully, he is now stable and recovering.
+
+While travelling from Hyderabad to my hometown, I faced significant travel disruptions due to the cyclone’s impact. Several roads were flooded, resulting in road closures and diversions. Train services were also disrupted due to railway track damage, with cancellations and rescheduling reported. I had to take multiple routes and make considerable changes to my journey to reach my hometown.
+
+I was planning to return to Hyderabad with my family; however, the situation remains concerning. Some areas in Ganjam district and surrounding regions are still experiencing flooding and travel disruptions. Additionally, Cyclone Murasu is approaching the region, and recent news reports indicate that southern Odisha has been placed on high alert, with evacuation activities underway in some areas.
+
+Considering the prevailing conditions, the possibility of further travel disruptions, and the safety of my infant and family, I am concerned about undertaking the return journey at this point.
+
+For your reference, I am sharing the recent news reports:
+
+1. The Hindu: Cyclone Murasu forms over Bay of Bengal; southern Odisha on high alert
+2. Times of India: Round II of evacuations begins in Odisha as Cyclone Murasu approaches AP coast
+
+Considering these circumstances, I kindly request your approval to continue working from home until 6th November.
+
+I will remain fully available during working hours and ensure that all my responsibilities, meetings, and deliverables continue without any disruption.
+
+I sincerely appreciate your understanding and support during this situation.
+
+Thanks and regards,
+
+
+
+
+
+
 1. Invention Title
 
 Prompt Fingerprinting System for Persistent Prompt Identity, Artifact Reuse, and Adaptive LLM Execution
